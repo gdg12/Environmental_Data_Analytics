@@ -11,7 +11,7 @@ editor_options:
 ## LESSON OBJECTIVES
 1. Develop familiarity with the form and function of the RStudio interface.
 2. Apply basic functionality of R
-3. Evaluate how basic practies in R contribute to best management practices for data analysis
+3. Evaluate how basic practices in R contribute to best management practices for data analysis
 
 ## TOUR OF RSTUDIO
 Welcome to the RStudio interface. When you open RStudio, you will see four panels:
@@ -22,7 +22,7 @@ Welcome to the RStudio interface. When you open RStudio, you will see four panel
 
 **Workspace Browser** (top right) holds the `global environment` that is populated by analyses run in each R session. There is also a `history` tab and a `git` tab. 
 
-**Notebook** (bottom right) holds tabs for `files`, `plots`, `packages`, and `help`. You will interact with each of these functinalities, and we will explain each as they come up.
+**Notebook** (bottom right) holds tabs for `files`, `plots`, `packages`, and `help`. You will interact with each of these functionalities, and we will explain each as they come up.
 
 More on the functinality of each of these panels as we move through this lesson.
 
