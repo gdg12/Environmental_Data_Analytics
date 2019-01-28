@@ -1,6 +1,6 @@
 ---
 title: "Assignment 3: Data Exploration"
-author: "Student Name"
+author: "Gaby Garcia"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -25,11 +25,14 @@ This will save the PDF output in your Assignments folder.
 
 The completed exercise is due on Thursday, 31 January, 2019 before class begins.
 
-## 1) Set up your R session
+# 1) Set up your R session
 
 Check your working directory, load necessary packages (tidyverse), and upload the North Temperate Lakes long term monitoring dataset for the light, temperature, and oxygen data for three lakes (file name: NTL-LTER_Lake_ChemistryPhysics_Raw.csv). Type your code into the R chunk below.
 ```{r}
-
+getwd()
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Raw")
+library(tidyverse)
+LakesData <-read.csv("NTL-LTER_Lake_ChemistryPhysics_Raw.csv")  #renaming data frame to make it easier to code
 ```
 
 ## 2) Learn about your system
@@ -37,6 +40,10 @@ Check your working directory, load necessary packages (tidyverse), and upload th
 Read about your dataset in the NTL-LTER README file. What are three salient pieces of information you gained from reading this file?
 
 > ANSWER: 
+1.) The data set consists of parameters collected from studies of lakes in the North Temperate Lakes District in Wisconsin, and was compiled using the North Temperate Lakes Long Term Ecological Research website. 
+2.) All of the physical and chemical variables were measured at a central station at the deepest point of each lake; the measurements were generally taken in the morning from 8-9 am.
+3.) For the variable DOC (dissolved organic carbon), 100-300 mL of lake water from each depth was filtered through 153 um mesh to remove large zooplankton. 
+
 
 ## 3) Obtain basic summaries of your data
 
@@ -48,24 +55,73 @@ Write R commands to display the following information:
 4. class of the variables lakename, sampledate, depth, and temperature
 5. summary of lakename, depth, and temperature
 
-```{r}
-# 1
 
+
+###Use dim() function to determine the number of rows and the number of columns in the data frame
+```{r}
+# 1  
+dim(LakesData)
+
+```
+
+###Use class() function to determine the class attribute (data frame)
+```{r}
 # 2
-
-# 3
-
-# 4
-
-# 5
-
+class(LakesData)
 ```
 
-Change sampledate to class = date. After doing this, write an R command to display that the class of sammpledate is indeed date. Write another R command to show the first 10 rows of the date column. 
+
+###Use head() function to return the first 8 rows of data set
+```{r}
+head(LakesData, 8)
+```
+
+# Use class function to determine the class of the following variables:
+```{r}
+class(LakesData$lakename)
+```
 
 ```{r}
-
+class(LakesData$sampledate)
 ```
+
+```{r}
+class(LakesData$depth)
+```
+
+
+```{r}
+class(LakesData$temperature)
+```
+
+#Summary of Lake Name, depth, and temperature
+```{r}
+summary(LakesData$lakename)
+```
+
+```{r}
+summary(LakesData$depth)
+```
+
+```{r}
+summary(LakesData$temperature)
+```
+
+
+##Change sampledate to class = date. After doing this, write an R command to display that the class of sammpledate is indeed date. Write another R command to show the first 10 rows of the date column. 
+
+```{r}
+LakesData$sampledate<-as.Date(LakesData$sampledate, format = "%m/%d/%y") 
+```
+
+```{r}
+class(LakesData$sampledate)
+```
+
+```{r}
+head(LakesData$sampledate, 10)
+```
+
 
 Question: Do you want to remove NAs from this dataset? Why or why not?
 
