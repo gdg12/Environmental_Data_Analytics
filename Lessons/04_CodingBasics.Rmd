@@ -251,6 +251,7 @@ Make a recipe based on the ingredients you have
 ```{r}
 
 ##If x<3, then multiply x*2. Else X =/<2, then x/2
+
 recipe4 <- function(x) {
   if(x < 3) {
     x*2
@@ -290,6 +291,7 @@ recipe6 <- function(x){
   ifelse(x<3, x*2, x/2)
   
 }
+
 
 meal4 <- recipe6(4); meal4
 meal5 <- recipe6(2); meal5
