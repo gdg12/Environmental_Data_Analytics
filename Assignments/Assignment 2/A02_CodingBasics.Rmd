@@ -25,9 +25,9 @@ This will save the PDF output in your Assignments folder.
 
 The completed exercise is due on Thursday, 24 January, 2019 before class begins.
 
-## Basics Day 1
+# Basics Day 1
 
-1. Generate a sequence of numbers from one to 100, increasing by fours. Assign this sequence a name. 
+#1. Generate a sequence of numbers from one to 100, increasing by fours. Assign this sequence a name. 
 
 ```{r}
 ###Using sequence function to create a sequence of numbers
@@ -36,7 +36,7 @@ firstseq
 ```
 
 
-2. Compute the mean and median of this sequence. 
+#2. Compute the mean and median of this sequence. 
 ```{r}
 ###mean of firstseq
 mean(firstseq)
@@ -48,78 +48,124 @@ median(firstseq)
 ```
 
 
-3. Ask R to determine whether the mean is greater than the median. 
+#3. Ask R to determine whether the mean is greater than the median. 
 ```{r}
 ###Use greater than sign to determine whether mean>median
 mean(firstseq)>median(firstseq)
 ```
 
 
-4. Insert comments in your code to describe what you are doing.
+#4. Insert comments in your code to describe what you are doing.
 
 
 ##Basics Day 2
 
-5. Create a series of vectors, each with four components, consisting of (a) names of students, (b) test scores out of a total 100 points, and (c) whether or not they have passed the test (TRUE or FALSE) with a passing grade of 50.
+#5. Create a series of vectors, each with four components, consisting of (a) names of students, (b) test scores out of a total 100 points, and (c) whether or not they have passed the test (TRUE or FALSE) with a passing grade of 50.
 
-```{r}
 ###Character Vector
+```{r}
 Students<-c("Lucy", "Jimmy", "Gaby", "Austin")
+```
 
 ###Numeric Vector
+```{r}
 Scores<-c(93, 34, 88, 51)
+```
 
 ###Logical Vector
+```{r}
 Result<-c("TRUE", "FALSE", "TRUE", "TRUE")
 ```
 
 
-6. Label each vector with a comment on what type of vector it is.
+#6. Label each vector with a comment on what type of vector it is.
 ```{r}
 ##Labeled up above
 ```
 
 
-7. Combine each of the vectors into a data frame. Assign the data frame an informative name.
+#7. Combine each of the vectors into a data frame. Assign the data frame an informative name.
 
 ```{r}
 SchoolData<-data.frame(Students, Scores, Result)
 SchoolData
 ```
 
-8. Label the columns of your data frame with informative titles.
+#8. Label the columns of your data frame with informative titles.
 
 ```{r}
 names(SchoolData)<-c("Student_Names", "Student_Scores", "Student_Results")
 ```
 
 
-9. QUESTION: How is this data frame different from a matrix?
+#9. QUESTION: How is this data frame different from a matrix?
 
 > ANSWER: This data frame is different from a matrix because data frames are more general and are able to store different modes of data (characters, numbers, or logical). All columns in a matrix are only able to store the same data type, and must have the same length.
 
-10. Create a function with an if/else statement. Your function should determine whether a test score is a passing grade of 50 or above (TRUE or FALSE). You will need to choose either the `if` and `else` statements or the `ifelse` statement. The name of your function should be informative.
+#10. Create a function with an if/else statement. Your function should determine whether a test score is a passing grade of 50 or above (TRUE or FALSE). You will need to choose either the `if` and `else` statements or the `ifelse` statement. The name of your function should be informative.
 
 ```{r}
-x <- 51
+TestScoreResults<-function(x){
 if(x >= 50){
 print("TRUE")
-}else{
-print("FALSE")
 }
+
+else{
+print("FALSE")
+}}
 ```
 
-11. Apply your function to the vector with test scores that you created in number 5. 
+#11. Apply your function to the vector with test scores that you created in number 5. 
 
 ```{r}
-Scores
-if(x >= 50){
-print("TRUE")
-}else{
-print("FALSE")
-}
+Scores<-c(93, 34, 88, 51)
+Students<-c("Lucy", "Jimmy", "Gaby", "Austin")
+
+lapply(Scores, TestScoreResults)  #first argument is the Scores vector, second argument is the function I created
+
 ```
 
-12. QUESTION: Which option of `if` and `else` vs. `ifelse` worked? Why?
 
-> ANSWER: 
+
+#Try ifelse function
+
+```{r}
+TestScoreResults2 <- function(x){
+  ifelse(x>=50, "Pass", "Fail")
+  
+}
+
+lapply(Scores, TestScoreResults2)
+```
+
+##Lucy
+```{r}
+TestScoreResults2(93)
+```
+
+##Jimmy
+```{r}
+TestScoreResults2(34)
+```
+
+##Gaby
+```{r}
+TestScoreResults2(88)
+```
+
+##Austin
+```{r}
+TestScoreResults2(51)
+```
+
+
+
+
+#12. QUESTION: Which option of `if` and `else` vs. `ifelse` worked? Why?
+
+> ANSWER: Both options worked for me. The syntax of the 'if' and 'else' statement is:
+
+###if (test) {statement1} else {statement2}. If the test expression is true, then statement1 will be executed. But if the test expression is false, then statement2 will be executed. In this instance, I choose the 'if' and 'else' option because if the Boolean expression of x>=50 evaluates to be true, then the if block of code will be executed (print "TRUE"), otherwise the else block of code will be executed (print "FALSE").
+
+###The syntax of the Iifelse' statement is: ifelse(test_expression, x, y). The 'ifelse' expression worked because it requires a vector. This returned vector has element from x ("Pass") if the corresponding value of test_expression is TRUE or from y("Fail") if the corresponding value of test_expression is FALSE. 
+

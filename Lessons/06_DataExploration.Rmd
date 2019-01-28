@@ -8,7 +8,6 @@ fig_width: 5
 fig_height: 2.5
 editor_options: 
   chunk_output_type: console
-
 ---
 
 ## LESSON OBJECTIVES
@@ -24,6 +23,8 @@ Why is data exploration our first step in analyzing a dataset? What information 
 
 ```{r}
 # 1. Set up your working directory
+
+
 getwd()
 
 # 2. Load packges
@@ -46,10 +47,12 @@ colnames(USGS.flow.data) <- c("agency_cd", "site_no", "datetime",
                               "gage.height.max", "gage.height.max.approval", 
                               "gage.height.min", "gage.height.min.approval", 
                               "gage.height.mean", "gage.height.mean.approval")
+
 str(USGS.flow.data)
 dim(USGS.flow.data)
 
-#head(USGS.flow.data)
+##head(USGS.flow.data)
+
 class(USGS.flow.data$datetime)
 
 ```
@@ -58,7 +61,7 @@ class(USGS.flow.data$datetime)
 
 ### Formatting dates
 
-R will often import dates as factors or characters rather than dates. To fix, this we need to tell R that it is looking at dates. We also need to specify the format the dates are in. By default, if you don't provide a format, R will attempt to use %Y-%m-%d or %Y/%m/%d as a default. Note: if you are working collaboratively in an international setting, using a year-month-day format in spreadsheets is the least ambiguous of date formats. Make sure to check whether month-day-year or day-month-year is used in an ambiguously formatted spreadsheet.
+R will often import dates as factors or characters rather than dates. To fix, this we need to tell R that it is looking at dates. We also need to specify the format the dates are in. By default, if you don't provide a format, R will attempt to use %Y-%m-%d or %Y/%m/%d as a default. Note: if you are working collaboratively in an international setting, using a year-month-day format(2019/01/24) in spreadsheets is the least ambiguous of date formats. Make sure to check whether month-day-year or day-month-year is used in an ambiguously formatted spreadsheet.
 
 Formatting of dates in R: 
 
@@ -71,21 +74,39 @@ Formatting of dates in R:
 %b  abbreviated month
 %B  unabbreviated month
 
-In some cases when dates are provided as integers, you may need to provide an origin for your dates. Beware: the "origin" date for Excel (Windows), Excel (Mac), R, and MATLAB all have different origin dates. Google this if it comes up.
+
+
+In some cases when dates are provided as integers, you may need to provide an origin for your dates.  Beware: the "origin" date for Excel (Windows), Excel (Mac), R, and MATLAB all have different origin dates. Google this if it comes up.
 
 ```{r}
 help(as.Date)
 
-# Adjust date formatting for today
-# Write code for three different date formats. 
-# An example is provided to get you started.
-# (code must be uncommented)
+ ##djust date formatting for today
+Write code for three different date formats. 
+ An example is provided to get you started.
+ (code must be uncommented)
+
 today <- Sys.Date()
-format(today, format = "%B")
+today
+
+ ##1st time
+today1<-Sys.Date()
+format(today1, format="%Y/%m/%d")
+
+ ##2nd time
+today2<-Sys.Date()
+format(today2, format="%y/%b/%d")
+
+##3rd time
+today3<-Sys.Date()
+format(today3, format = "%Y/%b/%d")
+
+
 #format(today, format = "")
 #format(today, format = "")
 #format(today, format = "")
 
+##Tell R to change factor to a date, in the format Month/day/year
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%m/%d/%y") 
 ```
 

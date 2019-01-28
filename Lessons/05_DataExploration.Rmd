@@ -25,7 +25,7 @@ In this course, we will always open the R project file for the course, and addit
 
 ```{r}
 # Working directory should be set to the parent folder for the Environmental Data Analytics Course, i.e., the folder that houses the R Project file.
-
+##Shows the file path where your working directory is set
 getwd()
 ```
 
@@ -40,13 +40,14 @@ If your working directory is not set to the folder you want, you have several op
 
 You may change your working directory without coding by going to the Session menu in RStudio and navigating to the Set Working Directory tab. From there, you may select from a series of options to reset your working directory. 
 
-Another option is to use the R package `here`. We will not be using this option in class, but it is growing quite popular among R users. A more detailed description and rationale can be found here: https://github.com/jennybc/here_here. 
+Another option is to use the R package `here`. Allows me to go between different working directories with ease. We will not be using this option in class, but it is growing quite popular among R users. A more detailed description and rationale can be found here: https://github.com/jennybc/here_here. 
 
 ### Load your packages
 
 At the top of your R scripts, you should load any packages that need to be used for that R script. A common issue that arises is that packages will be loaded in the middle of the code, making it difficult to run specific chunks of code without scrolling to make sure all necessary packages are loaded. For example, the tidyverse package is one that we will use regularly in class.
 
 At the same time, you should also load your theme if you are doing any data visualization with ggplot. More on this later.
+##Using the library() function is better than using require() because library function will tell you if there's an error loading a package. 
 
 ```{r}
 # Load package
@@ -65,63 +66,105 @@ Note: In the Knit menu in the Editor, you will need to specify whether your knit
 
 ```{r}
 # Absolute file path (not recommended)
-#read.csv("/Users/katerisalk/Documents/Duke/Courses/Environmental_Data_Analytics/Data/Raw/USGS_Site02085000_Flow_Raw.csv")
+read.csv("/Users/katerisalk/Documents/Duke/Courses/Environmental_Data_Analytics/Data/Raw/USGS_Site02085000_Flow_Raw.csv")
+```
 
 # Relative file path (friendly for users regardless of machine)
+```{r}
 USGS.flow.data <- read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv")
+```
 
 # What happens if we don't assign a name to our imported dataset?
-#read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv")
-
-# Another option is to choose with your browser
-# read.csv(file.choose())
-
-# To import .txt files, use read.table rather than read.csv
-#read.table()
+```{r}
+read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv")
+###It uploads all of the data set-console says it has reached the maximum it can print
 
 ```
+
+# Another option is to choose with your browser
+```{r}
+read.csv(file.choose())
+###Coding with a relative path is a better option because maybe you don't know what you are looking for, and it is not reproducible. 
+```
+
+# To import .txt files, use read.table rather than read.csv
+```{r}
+#read.table()
+```
+
 
 ## EXPLORE YOUR DATASET
 
 Take a moment to read through the README file associated with the USGS dataset on discharge at the Eno River. Where can you find this file? How does the placement and information found in this file relate to the best practices for reproducible data analysis?
 > ANSWER: 
 
+##In the R for Data Science book, Tibbles is mentioned. Kateri won't be teaching tibbles in this class. 
 ```{r}
-View(USGS.flow.data)
+
+USGS.flow.data<-USGS_Site02085000_Flow_Raw
+View(USGS_Site02085000_Flow_Raw)
 # Alternate option: click on data frame in Environment tab
 
-class(USGS.flow.data)
-colnames(USGS.flow.data)
+class(USGS_Site02085000_Flow_Raw)
+colnames(USGS_Site02085000_Flow_Raw)
 
 # Rename columns
-colnames(USGS.flow.data) <- c("agency_cd", "site_no", "datetime", 
+colnames(USGS_Site02085000_Flow_Raw) <- c("agency_cd", "site_no", "datetime", 
                               "discharge.max", "discharge.max.approval", 
                               "discharge.min", "discharge.min.approval", 
                               "discharge.mean", "discharge.mean.approval", 
                               "gage.height.max", "gage.height.max.approval", 
                               "gage.height.min", "gage.height.min.approval", 
                               "gage.height.mean", "gage.height.mean.approval")
-str(USGS.flow.data)
-dim(USGS.flow.data)
-length(USGS.flow.data)
 
-head(USGS.flow.data)
-head(USGS.flow.data, 10)
-tail(USGS.flow.data, 5)
-USGS.flow.data[30000:30005, c(3, 8, 14)]
 
-class(USGS.flow.data$datetime)
-class(USGS.flow.data$discharge.mean)
-class(USGS.flow.data$gage.height.mean)
+##Str means structure. Tells us classes, number of objects, number of variables, the variable type
+str(USGS_Site02085000_Flow_Raw)
 
-summary(USGS.flow.data)
-summary(USGS.flow.data$discharge.mean)
+##Dim() means dimensions: gives us the number of rows and number of columns
+dim(USGS_Site02085000_Flow_Raw)
+
+
+##Gives us the length of data frame
+length(USGS_Site02085000_Flow_Raw)
+
+
+##Gives us the first couple rows of the data frame's columns. Shows us first 6 rows as a default
+head(USGS_Site02085000_Flow_Raw)
+
+##Gives us the first 10 rows of the data frame's columns
+head(USGS_Site02085000_Flow_Raw, 10)
+
+##Gives us the final 5 rows of data 
+tail(USGS_Site02085000_Flow_Raw, 5)
+
+
+##Index rows 30,000-30,005, and columns 3,8, and 14
+USGS_Site02085000_Flow_Raw[30000:30005, c(3, 8, 14)]
+
+
+##Gives us a variable's class. Datetime's class is given as a character, which it is not
+class(USGS_Site02085000_Flow_Raw$datetime)
+
+##Gives us a variable's class. Discharge.mean's class is also given as a character
+class(USGS_Site02085000_Flow_Raw$discharge.mean)
+
+class(USGS_Site02085000_Flow_Raw$gage.height.mean)
+
+
+##Gives us basic statistics of data frame
+summary(USGS_Site02085000_Flow_Raw)
+
+##Gives us counts of our factor levels
+summary(USGS_Site02085000_Flow_Raw$discharge.mean)
+
+
 summary(USGS.flow.data$gage.height.mean)
 
 ```
 
 What happened to blank cells in the spreadsheet when they were imported into R?
-> ANSWER: 
+> ANSWER: They turn into NA's.
 
 ## TIPS AND TRICKS: SPREADSHEETS
 
@@ -129,7 +172,7 @@ What happened to blank cells in the spreadsheet when they were imported into R?
 
 *The first row is reserved for column headers.
 
-*A second, secondary row for column headers (e.g., units) should not be used if data are being imported into R. Incorporate units into the first row column headers if necessary.
+*A second, secondary row for column headers (e.g., units) should not be used if data are being imported into R. ******Incorporate units into the first row column headers if necessary.*****
 
 *Short names are preferred for column headers, to the extent they are informative. Additional information can be stored in comments within R scripts and/or in README files.
 
@@ -138,5 +181,5 @@ What happened to blank cells in the spreadsheet when they were imported into R?
 *Avoid symbols in column headers. This can cause issues when importing into R.
 
 ```{r}
-
+getwd()
 ```
