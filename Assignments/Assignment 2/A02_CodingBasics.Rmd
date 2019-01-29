@@ -169,3 +169,10 @@ TestScoreResults2(51)
 
 ###The syntax of the Iifelse' statement is: ifelse(test_expression, x, y). The 'ifelse' expression worked because it requires a vector. This returned vector has element from x ("Pass") if the corresponding value of test_expression is TRUE or from y("Fail") if the corresponding value of test_expression is FALSE. 
 
+*****Updated Notes from Taylor****:
+Ifelse() function allows you to input a vector and outputs a vector
+
+
+'If' and 'else' function 
+Takes vector but only gives you a response for the first vector only
+Doesn’t work around vectors specifically
