@@ -172,7 +172,7 @@ Note: each of these approaches utilize the package "ggplot2". We will be coverin
 Visualize count data for categorical variables. 
 
 ###GGplot2 is a package within the TidyVerse package.  This takes categorical data and fivws us a bar-the height is the number of samples.
-Geom_bar works great for ategorical variables 
+Geom_bar works great for categorical variables 
 ```{r, fig.height = 3, fig.width = 4}
 library(ggplot2)
 ggplot(USGS.flow.data.complete, aes(x = discharge.mean.approval)) +
@@ -209,7 +209,7 @@ ggplot(USGS.flow.data.complete) +
 ```
 ### Frequency line graph (function: geom_freqpoly)
 
-An alternate to a histogram is a frequency polygon graph (distributions of values for continuous numerical variables). Instead of displaying bars,  counts of continuous variables are displayed as lines. This is advantageous if you want to display multiple variables or categories of variables at once.
+An alternate to a histogram is a frequency polygon graph (distributions of values for continuous numerical variables). Instead of displaying bars, counts of continuous variables are displayed as lines. This is advantageous if you want to display multiple variables or categories of variables at once.
 
 ```{r, fig.height = 3, fig.width = 4}
 #Create three frequency polygons (lines): one for mean gauge height on any day, one for min gauge height on any day, and one for the max gage height on any day

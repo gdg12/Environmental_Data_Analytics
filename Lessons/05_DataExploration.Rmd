@@ -26,7 +26,7 @@ In this course, we will always open the R project file for the course, and addit
 ```{r}
 # Working directory should be set to the parent folder for the Environmental Data Analytics Course, i.e., the folder that houses the R Project file.
 ##Shows the file path where your working directory is set
-getwd()
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Raw")
 ```
 
 What is the output that results?

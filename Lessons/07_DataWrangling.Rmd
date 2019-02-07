@@ -5,7 +5,7 @@ date: "Spring 2019"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## LESSON OBJECTIVES
@@ -24,61 +24,104 @@ In assignment 3, you explored the North Temperate Lakes Long-Term Ecological Res
 We will continue working with this dataset today. 
 
 ```{r}
-getwd()
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Raw")
 library(tidyverse)
-NTL.phys.data <- read.csv("./Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
-
-head(NTL.phys.data)
-colnames(NTL.phys.data)
-summary(NTL.phys.data)
-dim(NTL.phys.data)
-
+NTL.phys.data <- read.csv("NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
+attach(NTL.phys.data)
 ```
+
+
+
+```{r}
+head(NTL.phys.data)
+```
+
+
+
+##Column Names
+```{r}
+colnames(NTL.phys.data)
+```
+
+##Summary
+```{r}
+summary(NTL.phys.data)
+```
+
+
+```{r}
+dim(NTL.phys.data)
+```
+###11 columns, 38,614 rows
+
 
 ## DATA WRANGLING
 
 Data wrangling takes data exploration one step further: it allows you to process data in ways that are useful for you. An important part of data wrangling is creating tidy datasets, with the following rules: 
 
 1. Each variable has its own column
-2. Each observation has its own row
-3. Each value has its own cell
+2. Each observation has its own row (in this data set, each row is a lake water sample at a certain location at a certain time)
+3. Each value has its own cell (if you have multiple pieces of information in a cell, you would need to split up the cell. For ex. If you have a sample with a start and end time in the same cell)
 
 What is the best way to wrangle data? There are multiple ways to arrive at a specific outcome in R, and we will illustrate some of those approaches. Your goal should be to write the simplest and most elegant code that will get you to your desired outcome. However, there is sometimes a trade-off of the opportunity cost to learn a new formulation of code and the time it takes to write complex code that you already know. Remember that the best code is one that is easy to understand for yourself and your collaborators. Remember to comment your code, use informative names for variables and functions, and use reproducible methods to arrive at your output.
+
+Do data exploration before data wrangling. 
 
 ## WRANGLING IN R: DPLYR
 
 `dplyr` is a package in R that includes functions for data manipulation (i.e., data wrangling or data munging). `dplyr` is included in the tidyverse package, so you should already have it installed on your machine. The functions act as verbs for data wrangling processes. For more information, run this line of code:
 
+##Vignettes show up in the help window. 
 ```{r, results = "hide"}
 vignette("dplyr")
 ```
 
 
-### Filter
+## Filter
 
 Filtering allows us to choose certain rows (observations) in our dataset.
 
 A few relevant commands: 
-`==`
-`!=`
+`==` ###equals
+`!=` ###is not equal to
 `<`
 `<=`
 `>`
 `>=`
-`&`
-`|`
+`&` "and" command
+`|` "or" command
 
+##Determine class of variables
 ```{r}
+#
 class(NTL.phys.data$lakeid)
 class(NTL.phys.data$depth)
+```
 
+
+
+##Find values where depth=0
+```{r}
 # matrix filtering
 NTL.phys.data.surface1 <- NTL.phys.data[NTL.phys.data$depth == 0,]
 
-# dplyr filtering
-NTL.phys.data.surface2 <- filter(NTL.phys.data, depth == 0)
-NTL.phys.data.surface3 <- filter(NTL.phys.data, depth < 0.25)
+```
+###Now we only have 1902 rows. Because we've told R to do matrix subsetting, we need to tell it which columns to choose. Just including the comma tells R to include all of the columns
 
+
+
+
+##Filtering
+```{r}
+# dplyr filtering
+NTL.phys.data.surface2 <- filter(NTL.phys.data, depth== 0)
+NTL.phys.data.surface3 <- filter(NTL.phys.data, depth < 0.25)
+```
+With the filter function, give the data frame, a comma, then a conditional statement which will subset
+
+
+
+```{r}
 # Did the methods arrive at the same result?
 head(NTL.phys.data.surface1)
 dim(NTL.phys.data.surface1)
@@ -86,91 +129,168 @@ head(NTL.phys.data.surface2)
 dim(NTL.phys.data.surface2)
 head(NTL.phys.data.surface3)
 dim(NTL.phys.data.surface3)
+```
+
 
 # Choose multiple conditions to filter
+```{r}
+
 summary(NTL.phys.data$lakename)
 NTL.phys.data.PeterPaul1 <- filter(NTL.phys.data, lakename == "Paul Lake" | lakename == "Peter Lake")
 NTL.phys.data.PeterPaul2 <- filter(NTL.phys.data, lakename != "Central Long Lake" & 
                                      lakename != "Crampton Lake" & lakename != "East Long Lake" &
                                      lakename != "Hummingbird Lake" & lakename != "Tuesday Lake" &
                                      lakename != "Ward Lake" & lakename != "West Long Lake")
+
+
 NTL.phys.data.PeterPaul3 <- filter(NTL.phys.data, lakename %in% c("Paul Lake", "Peter Lake"))
+```
+###We chose the "or" operator because we want to chose condition where we want Peter Lake OR Paul Lake (include). 
+###The %in% operator means INCLUDE, which creates a list with Paul Lake and Peter Lake. 
+###Use & to start a new line
+
 
 # Choose a range of conditions of a numeric or integer variable
+#Let's filter out data set to only include dates from June (day 151 is June 1st) through October(day 305 is October 31). 
+```{r}
 summary(NTL.phys.data$daynum)
+
+
 NTL.phys.data.JunethruOctober1 <- filter(NTL.phys.data, daynum > 151 & daynum < 305)
+
 NTL.phys.data.JunethruOctober2 <- filter(NTL.phys.data, daynum > 151, daynum < 305)
+##Same thing as code above but use a comma instead of the & function
+
 NTL.phys.data.JunethruOctober3 <- filter(NTL.phys.data, daynum >= 152 & daynum <= 304)
+##Greater than or equal to, Less than or equal to
+
 NTL.phys.data.JunethruOctober4 <- filter(NTL.phys.data, daynum %in% c(152:304))
+##Rather than a list of two different components, give filter function a range of numbers including days 152 and 304. %in% is inclusive for the ranges you specify (152:304)
+```
+
+
+
 
 # Exercise: 
 # filter NTL.phys.data for the year 1999
 # what code do you need to use, based on the class of the variable?
+
+```{r}
 class(NTL.phys.data$year4)
+```
+
+
+##Answer
+```{r}
+Data1999<-filter(NTL.phys.data, year4==1999)
+
+```
+###We don't need to put 1999 in quotes because it's not a character or a factor, but an integer. You need to put dates in quotes. 
+
 
 # Exercise: 
 # filter NTL.phys.data for Tuesday Lake from 1990 through 1999.
-
-
+```{r}
+DataTuesdayLake<-filter(NTL.phys.data, lakename== "Tuesday Lake")
+DataTuesdayLake1999<-filter(DataTuesdayLake, year4%in%c(1990:1999))
 ```
+
+
+
+
 Question: Why don't we filter using row numbers?
 
-> ANSWER: 
+> ANSWER: Rows don't give you a lot of information, and you'd have to go through the data table to look at the rows you'd want to subset out. Because we have so many rows, this isn't practical. Also, dplyr changes the row numbers when we start subsetting out data, so the row numbers wont be preserved in our script. 
 
-### Arrange
+## Arrange
 
 Arranging allows us to change the order of rows in our dataset. By default, the arrange function will arrange rows in ascending order.
 
 ```{r}
-NTL.phys.data.depth.ascending <- arrange(NTL.phys.data, depth)
-NTL.phys.data.depth.descending <- arrange(NTL.phys.data, desc(depth))
 
+###Arrange data set by depth
+NTL.phys.data.depth.ascending <-dplyr::arrange(NTL.phys.data, depth)
+
+###"desc" says arrange in descending order
+NTL.phys.data.depth.descending <- dplyr::arrange(NTL.phys.data, desc(depth))
+```
+
+```{r}
+class(temperature_C)
+```
+
+
+
+```{r}
 # Exercise: 
 # Arrange NTL.phys.data by temperature, in descending order. 
 # Which dates, lakes, and depths have the highest temperatures?
 
+LakesDataTemp<--dplyr::arrange(NTL.phys.data, desc(temperature_C))
 
 ```
-### Select
 
+
+
+## Select
 Selecting allows us to choose certain columns (variables) in our dataset.
+###Select lakename column, and everything between sampledate THROUGH TEMPERATURE
+```{r}
+NTL.phys.data.temps <-dplyr::select(NTL.phys.data, lakename, sampledate:temperature_C)
+
+#OR
+###NTL.phys.data.temps <-dplyr::select(NTL.phys.data, lakename, sampledate, depth, temperature_C)
+
+NTL.phys.data.temps
+```
+###Has more of a limited syntax than filter does
+
+
+
+
+## Mutate (very important to learn!)
+
+Mutating allows us to add new columns that are functions of existing columns. Operations include addition, subtraction, multiplication, division, log, and other functions. 
 
 ```{r}
-NTL.phys.data.temps <- select(NTL.phys.data, lakename, sampledate:temperature_C)
-
+###Let's say we want an additional column with temp in degrees fahrenheit, then add a mathematical operation that converts the celsius values to fahrenheit values. Mutate function always adds a column to the end of the data frame. You could do arithemtic functions, grabbing something from a different data set and importing it into a new column, etc). 
+NTL.phys.data.temps <- dplyr::mutate(NTL.phys.data.temps, temperature_F = (temperature_C*9/5) + 32)
+NTL.phys.data.temps
 ```
-### Mutate
+###Notice that if we have an NA for the degrees Celsius column, we'll also have an NA for the Fahrenheit column.
 
-Mutating allows us to add new columns that are functions of existing columns. Operations include addition, subtraction, multiplication, division, log, and other functions.
 
-```{r}
 
-NTL.phys.data.temps <- mutate(NTL.phys.data.temps, temperature_F = (temperature_C*9/5) + 32)
-
-```
-### Pipes
-
-Sometimes we will want to perform multiple commands on a single dataset on our way to creating a processed dataset. We could do this in a series of subsequent commands or create a function. However, there is another method to do this that looks cleaner and is easier to read. This method is called a pipe. We designate a pipe with `%>%`. A good way to think about the function of a pipe is with the word "then." 
+## Pipes
+Sometimes we will want to perform multiple commands on a single dataset on our way to creating a processed dataset. We could do this in a series of subsequent commands or create a function. However, there is another method to do this that looks cleaner and is easier to read. This method is called a pipe. We designate a pipe with `%>%`. A good way to think about the function of a pipe is with the word "then." This makes coding faster and eliminates need for several intermediate dataframes that we may not need. When we use the pipes function vs one function at a time, there is a new line after every pipe. For a pipe
 
 Let's say we want to take our raw dataset (NTL.phys.data), *then* filter the data for Peter and Paul lakes, *then* select temperature and observation information, and *then* add a column for temperature in Fahrenheit: 
 
+Data frame is the first thing you put in the code, then what you want to do with the data frame. 
 ```{r}
 NTL.phys.data.processed <- 
   NTL.phys.data %>%
-  filter(lakename == "Paul Lake" | lakename == "Peter Lake") %>%
-  select(lakename, sampledate:temperature_C) %>%
-  mutate(temperature_F = (temperature_C*9/5) + 32)
+  dplyr::filter(lakename == "Paul Lake" | lakename == "Peter Lake") %>%
+  dplyr::select(lakename, sampledate:temperature_C) %>%
+  dplyr::mutate(temperature_F = (temperature_C*9/5) + 32)
   
+NTL.phys.data.processed
 ```
 
 Notice that we did not place the dataset name inside the wrangling function but rather at the beginning.
 
-### Saving processed datasets
+
+## Saving processed datasets
+###Row names=true would mean that the file would count all of the rows, 
+###Rownames=FALSE means that The first column will be the first column in the data frame. 
+
 
 ```{r}
-write.csv(NTL.phys.data.PeterPaul1, row.names = FALSE, file = "./Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
+write.csv(NTL.phys.data.PeterPaul1, row.names = FALSE, file = "NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
 ```
+
 
 ## CLOSING DISCUSSION
 How did data wrangling help us to generate a processed dataset? How does this impact our ability to analyze and answer questions about our data?
+
 
