@@ -116,6 +116,7 @@ write.csv(NTL.nutrient.data.PeterPaul, row.names = FALSE, file = "NTL-LTER_Lake_
 # Remove columns that are not of interest for analysis
 ```{r}
 NTL.phys.data.PeterPaul.skinny <- select(NTL.phys.data.PeterPaul, 
+<<<<<<< HEAD
                                          lakename, year4, sampledate:irradianceDeck)
 
 ###We want to get rid of depth_id and comments columns
@@ -124,11 +125,14 @@ NTL.phys.data.PeterPaul.skinny <- select(NTL.phys.data.PeterPaul,
 ```
 ###Select function specifies which columns we want the data frame to keep
   
+=======
+                                         lakename, daynum, year4, sampledate:irradianceDeck)
+>>>>>>> 0093e291b66ba22b246b314b027e02be0645d372
   
   
 ```{r}
 NTL.nutrient.data.PeterPaul.skinny <- select(NTL.nutrient.data.PeterPaul, 
-                                             lakename, year4, sampledate, depth:po4)
+                                             lakename, daynum, year4, sampledate, depth:po4)
 ```
   
 
@@ -244,8 +248,15 @@ In dplyr, there are several types of join functions:
 ```{r}
 
 NTL.phys.nutrient.data.PeterPaul <- full_join(NTL.phys.data.PeterPaul.skinny, NTL.nutrient.data.PeterPaul.skinny)
+<<<<<<< HEAD
 NTL.phys.nutrient.data.PeterPaul
 write.csv(NTL.phys.nutrient.data.PeterPaul, row.names = FALSE, file="NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
+=======
+
+write.csv(NTL.phys.nutrient.data.PeterPaul, row.names = FALSE, 
+          file ="./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
+
+>>>>>>> 0093e291b66ba22b246b314b027e02be0645d372
 ```
 
 
@@ -309,6 +320,7 @@ NTL.PeterPaul.summaries <-
             meanTP = mean(tp_ug), 
             sdTP = sd(tp_ug))
 
+<<<<<<< HEAD
 NTL.PeterPaul.summaries
 ```
 ###This is helpful for barcharts
@@ -316,6 +328,11 @@ NTL.PeterPaul.summaries
 
 ```{r}
 write.csv(NTL.PeterPaul.summaries, row.names=FALSE, file="NTL-LTER_Lake_Summaries_PeterPaul_Processed.csv")
+=======
+write.csv(NTL.PeterPaul.summaries, row.names = FALSE, 
+          file ="./Data/Processed/NTL-LTER_Lake_Summaries_PeterPaul_Processed.csv")
+
+>>>>>>> 0093e291b66ba22b246b314b027e02be0645d372
 ```
 
 ## ALTERNATIVE METHODS FOR DATA WRANGLING
