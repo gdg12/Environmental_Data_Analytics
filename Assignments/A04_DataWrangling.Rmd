@@ -187,20 +187,23 @@ TotalCleanData<-rbind(Ozone2017clean, Ozone2018clean, PM2017clean, PM2018clean)
 ##Wrangle your new dataset with a pipe function (%>%) so that it fills the following conditions: 
 
 ##Sites: Blackstone, Bryson City, Triple Oak
-## Add columns for "Month" and "Year" by parsing your "Date" column (hint: `separate` function or `lubridate` package)
 ```{r}
 
 TotalCleanDataFilt <- filter(TotalCleanData, Site.Name %in% c("Blackstone",
                                                               "Bryson City", "Triple Oak"))
 
-
 ```
 
 
 
+## Add columns for "Month" and "Year" by parsing your "Date" column (hint: `separate` function or `lubridate` package)
+
+###I redid this section and used MUTATE, which adds a new column, instead of sepearate, which adds the new columns but removes the original 
 ```{r}
 library(tidyr)
-TotalCleanDataFiltDates <- separate(TotalCleanDataFilt, Date, c("Y", "m", "d"))
+TotalCleanDataFiltDates <- mutate(TotalCleanDataFilt, month = month(Date), day=day(Date), year=year(Date)) 
+
+###TotalCleanDataFiltDates <- separate(TotalCleanDataFilt, Date, c("Y", "m", "d"))
 ```
 
 
@@ -213,7 +216,7 @@ TotalCleanDataFiltDatesv2<-TotalCleanDataFiltDates %>%
 spread(AQS_PARAMETER_DESC, DAILY_AQI_VALUE)
 
 ```
-
+###Right now, Ozone and PM2.5 are stacked in the AQS_PARAMETER_DESC column. We want them to be in their own colunmns because they are different variables.
 
 #10 
 
@@ -228,6 +231,7 @@ dim(TotalCleanDataFiltDatesv2)
 ##Save your processed dataset with the following file name: 
 ##"EPAair_O3_PM25_NC1718_Processed.csv"
 ```{r}
+setwd("/Users/gabrielagarcia/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Processed")
 write.csv(TotalCleanDataFiltDatesv2, row.names=FALSE, 
           file="EPAair_O3_PM25_NC1718_Processed.csv")
 ```
@@ -245,7 +249,7 @@ write.csv(TotalCleanDataFiltDatesv2, row.names=FALSE,
 ###na.rm removes NAs
 ```{r}
 TotalCleanDataFiltDatesv2Summaries<-TotalCleanDataFiltDatesv2%>%
-  group_by(m)%>%
+  group_by(month)%>%
  summarize(MeanOzone=mean(Ozone, na.rm=TRUE), MeanPM=mean(PM2.5,na.rm=TRUE))
 
 ```
