@@ -278,7 +278,7 @@ print(lightvsDOfixed)
 ###We normally consider depth as an independent variable because it stays the same (temperature might vary)
 ###In limnology, depth is actually put on the y-axis
 ```{r}
-tempvsdepth <- ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth, color = day)) +
+tempvsdepth <- ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth)) +
   geom_point() +
   scale_y_reverse()
 print(tempvsdepth)
@@ -292,14 +292,15 @@ print(tempvsdepth)
 
 ```{r}
 NvsP <-
-  ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth)) +
-  geom_point() #+
-  #geom_smooth(method = lm) +
-  #geom_abline(aes(slope = 16, intercept = 0))
+  ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth)) +   ###colored by depth
+  geom_point() +
+  geom_smooth(method = lm) +   #Creates a line of best fit. method=lm tells it we need a linear model method-must include  this. The gray band around the blue line is a 95% confidence interval-we are 95% confident that this is the linear relationship of our data. We have so many points clustered together, which is why our CI is so narrow
+  geom_abline(aes(slope = 16, intercept = 0), lty=2)   #Allows us to draw a linear line with any specifications. lty gives different line types. The points fall mostly above this line, which means this system is more nitrogen rich with less phosphorus molecules. This is common in Midwestern freshwater systems. 
 print(NvsP)
 
 ```
-
+###colors don't match the gradient
+###The gray points mean there was no actual depth associated with that measurement, but there were N and P measurements for those points
 
 
 # Exercise: Plot relationships between air quality measurements
@@ -308,15 +309,19 @@ print(NvsP)
 # Plot AQI values for ozone by PM2.5, colored by site. 
 # Add a line of best fit for the linear regression of these variables.
 ```{r}
-
+AirPlot <- 
+  ggplot(EPAair, aes(x = Ozone, y = PM2.5, color = Site.Name)) +
+  geom_point() +
+   geom_smooth(method = lm)
+print(AirPlot)
 ```
-
-
+###Triple Oak site has no ozone measurements (y-values) which is why there are no blue points
+###Put aesthetics in main ggplot function
 
   
 
 
-### Plotting continuous vs. categorical variables
+# Plotting continuous vs. categorical variables
 
 ```{r, fig.height = 3, fig.width = 4, warning = FALSE}
  # Barplot + error bars
@@ -325,42 +330,100 @@ PeterPaul.nutrient.summaries <- PeterPaul.nutrients.gathered %>%
   summarise(sd = sd(concentration), 
             mean = mean(concentration))
 
+```
+###This looks different than other group_by function example in the past because we're now grouping by two factors: lakename and nutrient
+###It'll gives us 5 nutrients for both Peter and Paul Lakes
+
+
+#Bar Plot with Error Bars
+```{r}
 Nutrientplot <- 
   ggplot(PeterPaul.nutrients.gathered) +
   geom_bar(aes(x = lakename, y = concentration, fill = as.factor(nutrient)), # why did we use fill?
            position = "dodge", stat = "summary", fun.y = "mean")             # what's happening here?
 print(Nutrientplot)
+```
 
+###fill defines what colors the bars actually are
+###Position="Dodge" ensures the bars are separate instead of stacked
+###stat="summary and fun.y="mean" takes the summary statistic of a nutrient, and computes the mean of the nutrients to create the bar height
+
+Barcharts require command requires stat function
+
+
+```{r}
+class(nutrient)  #factor
+```
+
+
+
+#Boxplot with error bars
+```{r}
 Nutrientplot2 <- 
   ggplot(PeterPaul.nutrient.summaries, aes(x = lakename, y = mean, fill = as.factor(nutrient))) + #
   geom_bar(stat = "identity", position = "dodge") + # what does the stat command do?
   geom_errorbar(aes(ymin = mean-sd, ymax = mean+sd), # how do we specify error bars?
                  position = "dodge")
 print(Nutrientplot2)
+```
+###Stat="identity"--> If you want the heights of the bars to represent values in the data. For a given lake and nutrient, take the identity of that value.
+###Aesthetics are now in the ggplot () main function instead of in geom_bar() function
+###Geom_bar still has stat and position arguments
+
+#Geom_errorbar function
+###Needs aesthetics like any other geom function
+###We want the error bars to be one standard deviation below and above the mean. If we didn't have columns for mean and sd in our data summaries, we would have to formulate it ourselves
+###Because our geom_bar function has position="dodge"", the geom_errorbar function should also have position="dodge"
+
+###Issues with this graph: These error bars are massive and it's not possible to have a negative concntration of a nutrient. Environmental graphing is moving away from boxplots with error bars. 
+
+
+
+
 
 # Are there more effective ways to produce summary stats for categories?
 
 # Box and whiskers plot
+```{r}
 Nutrientplot3 <-
   ggplot(PeterPaul.nutrients.gathered, aes(x = lakename, y = concentration)) +
   geom_boxplot(aes(color = nutrient)) # Why didn't we use "fill"?
 print(Nutrientplot3)
+```
+###Color the boxplots by nutrients. 
+###fill=nutrient will only color in the middle of boxplot and not the outliers
+
 
 # Dot plot
+```{r}
 Nutrientplot4 <-
   ggplot(PeterPaul.nutrients.gathered, aes(x = lakename, y = concentration)) +
   geom_dotplot(aes(color = nutrient), binaxis = "y", binwidth = 1, 
                stackdir = "center", position = "dodge") #
 print(Nutrientplot4)
+```
+###binwidth on y-axis, and choose value of 1 
+
+###This plots every single value measured for a single variable. The wide spread of dot plots at 0 (density) show that there are a lot of different measurements for the concentration. 
+
 
 # Violin plot
+```{r}
 Nutrientplot5 <-
   ggplot(PeterPaul.nutrients.gathered, aes(x = lakename, y = concentration)) +
   geom_violin(aes(color = nutrient)) #
 print(Nutrientplot5)
+```
+##plotted same densities of concentrations as dot plot but as a smooth line, instead of dots
+
+
+
+
 
 # Frequency polygons
-# Using a tidy dataset
+
+## Using a tidy dataset
+```{r}
 Nutrientplot6 <-
   ggplot(PeterPaul.chem.nutrients) +
   geom_freqpoly(aes(x = tn_ug), color = "black") +
@@ -369,18 +432,49 @@ Nutrientplot6 <-
   geom_freqpoly(aes(x = no23), color = "gray") +
   geom_freqpoly(aes(x = po4), color = "blue") 
 print(Nutrientplot6)
+```
+###All nutrients are in separate columns. it draws 5 separate frequency polygons for each nutrient.
+
 
 # Using a gathered dataset
+```{r}
 Nutrientplot7 <-   
   ggplot(PeterPaul.nutrients.gathered) +
   geom_freqpoly(aes(x = concentration, color = nutrient))
 print(Nutrientplot7)
+```
+
+
 
 # Exercise: Plot distributions of AQI values for EPAair
 
 # 1. 
 # Create a bar chart plus standard deviation error bars for PM2.5, divided by year. 
 # Create separate bars for each site. 
+
+
+```{r}
+EPAAirSummary<- EPAair %>%
+  group_by(Site.Name, year) %>%
+  summarise(sd = sd(PM2.5, na.rm=TRUE), 
+            mean =mean(PM2.5, na.rm=TRUE))
+```
+
+
+```{r}
+Nutrientplot <- 
+  ggplot(EPAAirSummary, aes(x = as.factor(year), y = mean, fill =Site.Name)) +
+  geom_bar(position = "dodge", stat = "summary")  +
+  geom_errorbar(aes(ymin = mean-sd, ymax = mean+sd), position="dodge")
+
+
+print(Nutrientplot)
+```
+
+
+
+
+
 
 # 2. 
 # Create a new plot that better depicts the distribution of PM2.5 concentrations. 
