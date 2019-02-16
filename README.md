@@ -1,13 +1,11 @@
 # Environmental_Data_Analytics
 Data analytics course for Duke University. Course code: ENV 872L
 
-<<<<<<< HEAD
+
 ## User: Gaby Garcia
 =======
 ## User: Kateri Salk
-<<<<<<< HEAD
->>>>>>> 81f8a2ffece12327680d526a23241130673f08dd
-=======
+
 
 ## Instructions for using this repository: 
 1. Fork this repository into your own GitHub account. 
@@ -32,9 +30,4 @@ OR
 `git merge upstream/master`
 
 6. If a conflict arises during merge, update the file(s) to your liking, stage them and commit them.
-<<<<<<< HEAD
->>>>>>> dd25020246d174b1c016cbce8e2eacb7e2cbc8bd
-=======
 
-*testing merge error with Taylor*
->>>>>>> 9889e56630b87da9a1854836e3b9ee2ee9b3902e
