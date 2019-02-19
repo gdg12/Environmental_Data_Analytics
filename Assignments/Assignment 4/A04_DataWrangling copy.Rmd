@@ -129,7 +129,6 @@ str(PM2018)
 #3 
 ##Change Date to Date
 ```{r}
-
 Ozone2017$Date<-as.Date(Ozone2017$Date, format="%m/%d/%y")
 Ozone2018$Date<-as.Date(Ozone2018$Date, format="%m/%d/%y")
 PM2017$Date<-as.Date(PM2017$Date, format="%m/%d/%y")
