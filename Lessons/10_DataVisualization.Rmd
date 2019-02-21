@@ -16,32 +16,33 @@ editor_options:
 ```{r, message = FALSE, warning = FALSE}
 getwd()
 library(tidyverse)
+library(ggplot2)
 
  setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Processed")
-PeterPaul.chem.nutrients <- read.csv("NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
+PeterPaul.chem.nutrients <- read.csv("LakeChemistryNutrientsPeterPaul.csv")
 
+  
 
-
-PeterPaul.nutrients.gathered <- read.csv("NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv")
+PeterPaul.nutrients.gathered <- read.csv("PeterPaulNutrientsGathered.csv")
 EPAair <- read.csv("EPAair_O3PM25_3sites1718_processed.csv")
 
 
 
-```
-
-
-```{r}
-setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Processed")
-PeterPaul.chem.nutrients <- read.csv("NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
-PeterPaul.nutrients.gathered <- read.csv("NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv")
-PeterPaul.chem.nutrients.summaries <- read.csv("NTL-LTER_Lake_Summaries_PeterPaul_Processed.csv")
-EPAair <- read.csv("EPAair_O3_PM25_NC1718_Processed.csv")
-attach(EPAair)
-attach(PeterPaul.chem.nutrients)
-
 EPAair$Date <- as.Date(EPAair$Date, format = "%Y-%m-%d")
-PeterPaul.chem.nutrients$sampledate <- as.Date(PeterPaul.chem.nutrients$sampledate, format = "%Y-%m-%d")
+###PeterPaul.chem.nutrients$sampledate <- as.Date(PeterPaul.chem.nutrients$sampledate, format = "%Y-%m-%d")
+
 ```
+
+#Add Month and Day Columns to PeterPaulNutrients data table
+```{r}
+library(lubridate)
+PeterPaul.chem.nutrients$Date<-as.Date(PeterPaul.chem.nutrients$sampledate, format="%m/%d/%y")
+
+PeterPaul.chem.nutrients<- mutate(PeterPaul.chem.nutrients, month = month(Date))
+PeterPaul.chem.nutrients<-mutate(PeterPaul.chem.nutrients, day=day(Date))
+
+```
+
 
 
 # Themes
@@ -165,9 +166,8 @@ O3plot7 <- ggplot(EPAair, aes(x = Date, y = Ozone)) +
     date_breaks = "2 months", date_labels = "%b %y") +
   
   
-  ylab(expression("O"[3]* " AQI Value")) + ###The brackets around 3 will subscript 3. To superscript, use a caret.
-  theme(axis.text.x = element_text(angle = 45,  hjust = 1))   #Adds Y-axis label and position
-###Define element of text and put it at an angle of 45 degrees. hjust is the horizontal justification. Hjust of 1 moves it to the left
+  ylab(expression("O"[3]* " AQI Value")) + ###The brackets around 3 will subscript 3. To superscript, use a caret. #Adds Y-axis label and position
+  theme(axis.text.x = element_text(angle = 45,  hjust = 1))  ###Define element of text and put it at an angle of 45 degrees. hjust is the horizontal justification. Hjust of 1 moves it to the left
 
 print(O3plot7)  
 

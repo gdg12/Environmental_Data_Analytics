@@ -18,9 +18,9 @@ editor_options:
 ```{r, message = FALSE, warning = FALSE}
 setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Processed")
 library(tidyverse)
-
-PeterPaul.chem.nutrients <- read.csv("NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
-PeterPaul.nutrients.gathered <- read.csv("NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv")
+library(tidyr) 
+PeterPaul.chem.nutrients <- read.csv("LakeChemistryNutrientsPeterPaul.csv")
+PeterPaul.nutrients.gathered <- read.csv("PeterPaulNutrientsGathered.csv")
 PeterPaul.chem.nutrients.summaries <- read.csv("NTL-LTER_Lake_Summaries_PeterPaul_Processed.csv")
 EPAair <- read.csv("EPAair_O3_PM25_NC1718_Processed.csv")
 attach(EPAair)
@@ -57,6 +57,8 @@ attach(PeterPaul.chem.nutrients)
 ##Create a new Date column in the PeterPaul.chem.nutrients data table in the proper date format from the SampleDate column
 ```{r}
 setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Processed")
+library(lubridate)
+
 PeterPaul.chem.nutrients$Date<-as.Date(PeterPaul.chem.nutrients$sampledate, format="%m/%d/%y")
 
 PeterPaul.chem.nutrients<- mutate(PeterPaul.chem.nutrients, month = month(Date))
@@ -220,7 +222,7 @@ print(O3plot.Blackstone)
 
 ```{r}
 require(ggplot2)
-PeterPaulScatterplot<-ggplot(subset(PeterPaul.chem.nutrients, depth=0), aes(x=day, y=temperature_C)) + geom_point(color=year4) +facet_wrap(vars(lakename), nrow=2) 
+PeterPaulScatterplot<-ggplot(subset(PeterPaul.chem.nutrients, depth=0), aes(x=day, y=temperature_C)) + geom_point(colour=year4) +facet_wrap(vars(lakename), nrow=2) 
 print(PeterPaulScatterplot)
 ```
 
@@ -247,20 +249,26 @@ print(PeterPaulScatterplot2)
 # Plotting the relationship between two continuous variables: Scatterplot
 
 
-```{r, fig.height = 3, fig.width = 4, warning = FALSE}
+```{r, warning = FALSE}
 # Scatterplot
 lightvsDO <- 
   ggplot(PeterPaul.chem.nutrients, aes(x = irradianceWater, y = dissolvedOxygen)) +
   geom_point()
 print(lightvsDO)
 
-# Adjust axes
+```
+
+```{r}
 lightvsDOfixed <- 
   ggplot(PeterPaul.chem.nutrients, aes(x = irradianceWater, y = dissolvedOxygen)) +
   geom_point() +
   xlim(0, 250) +
   ylim(0, 20)
 print(lightvsDOfixed)
+```
+
+# Adjust axes
+
 ###More light at the surface of the water; from 0-50 irradiance, there are low oxygen concentrations. 
 
 

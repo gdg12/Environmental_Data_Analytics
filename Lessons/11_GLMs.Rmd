@@ -5,7 +5,7 @@ date: "Spring 2019"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## LESSON OBJECTIVES
@@ -18,24 +18,32 @@ editor_options:
 ```{r, message = FALSE, warning = FALSE}
 getwd()
 library(tidyverse)
-
-PeterPaul.nutrients <- read.csv("./Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaul_Processed.csv")
-EPAair <- read.csv("./Data/Processed/EPAair_O3PM25_3sites1718_processed.csv")
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Processed")
+PeterPaul.nutrients <- read.csv("NTL-LTER_Lake_Nutrients_PeterPaul_Processed.csv")
+EPAair <- read.csv("EPAair_O3_PM25_NC1718_Processed.csv")
 
 # Set date to date format
 EPAair$Date <- as.Date(EPAair$Date, format = "%Y-%m-%d")
-PeterPaul.nutrients$sampledate <- as.Date(PeterPaul.nutrients$sampledate, format = "%Y-%m-%d")
+PeterPaul.nutrients$sampledate <- as.Date(PeterPaul.nutrients$sampledate, format = "%m-%d-%y")
 
-# remove negative values for depth_id
+# remove negative values for depth_id. In this data set, the Surface is depth of 1, bottom is depth of 6 
 PeterPaul.nutrients <- filter(PeterPaul.nutrients, depth_id > 0)
 
 # set depth_id to factor
 PeterPaul.nutrients$depth_id <- as.factor(PeterPaul.nutrients$depth_id)
 
-mytheme <- theme_classic(base_size = 14) +
-  theme(axis.text = element_text(color = "black"), 
-        legend.position = "top")
-theme_set(mytheme)
+library(ggplot2)
+gabytheme <- theme_bw(base_size = 14) + 
+  theme(plot.title=element_text(face="bold", size="16", color="tomato2", hjust=0.5),
+        axis.title=element_text(face="bold.italic", size=11, color="black"),
+axis.text = element_text(face="bold", size=10, color = "black"), 
+panel.background=element_rect(fill="lightgray", color="darkblue"), 
+panel.border = element_rect(color = "black", size = 2),
+legend.position = "top", legend.background = element_rect(fill="white", color="black"),
+            legend.key = element_rect(fill="transparent", color="NA"))
+
+##Specifies this theme for rest of GGplots
+theme_set(gabytheme)
 
 ```
 
@@ -65,26 +73,56 @@ The GLM is based on the assumption that the data approximate a normal distributi
 
 ## T-TEST AND ONE-WAY ANOVA
 ### One-sample t-test
+
+###Equation of a t-test:   y=alpha1+alpha2 + E
 The object of a one sample test is to test the null hypothesis that the mean of the group is equal to a specific value. For example, we might ask ourselves (from the EPA air quality processed dataset): 
 
 Are Ozone levels below the threshold for "good" AQI index (0-50)?
 
 ```{r}
 summary(EPAair$Ozone)
+```
+
 
 # Evaluate assumption of normal distribution
+
+###ShapiroTest gives us a test statistic and a p-value, testing aginst assumption that the data is approximated by a normal distribution
+```{r}
+
 shapiro.test(EPAair$Ozone)
+
+```
+
+
+###A normal distrubtion should have the highest counts in the center of the bell curve. This data is right skewed, like a lot of environmental data
+```{r}
 ggplot(EPAair, aes(x = Ozone)) +
   geom_histogram(stat = "count")
-qqnorm(EPAair$Ozone); qqline(EPAair$Ozone)
 
+```
+
+
+##QQnorn and QQline
+```{r}
+qqnorm(EPAair$Ozone); qqline(EPAair$Ozone)
+```
+
+
+##While we have right skewed data, we do have enough samples to run the one-sample t-test
+###If you run one-sample t-test, set mu to your threshold, which is 50 here
+###alternative=alternative hypothesis, which is that the mean is less than 50
+```{r}
 O3.onesample <- t.test(EPAair$Ozone, mu = 50, alternative = "less")
 O3.onesample
 ```
+##t-score
+
+
 
 What information does the output give us? How might we report this information in a report?
 
-> ANWSER:
+> ANSWER:Report the type of test, your t-value, your p-statistic, your degrees of freedom
+Ozone AQI values in 2017-2018 were significantly lower than 50(one-sample t-test; t=-41.9, df=184, p<0.0001)
 
 ### Two-sample t-test
 The two-sample *t* test is used to test the hypothesis that the mean of two samples is equivalent. Unlike the one-sample tests, a two-sample test requires a second assumption that the variance of the two groups is equivalent. Are Ozone levels different between Blackstone and Bryson City?
@@ -92,20 +130,43 @@ The two-sample *t* test is used to test the hypothesis that the mean of two samp
 ```{r}
 shapiro.test(EPAair$Ozone[EPAair$Site.Name == "Blackstone"])
 shapiro.test(EPAair$Ozone[EPAair$Site.Name == "Bryson City"])
-var.test(EPAair$Ozone ~ EPAair$Site.Name)
 
+
+var.test(EPAair$Ozone ~ EPAair$Site.Name)
+##The null hypothesis is rejected; the variance between the two sample populations is different
+the 95% confidience interval doesn't overlap 1-one variance is greater than the other
+
+```
+
+
+
+```{r}
 ggplot(EPAair, aes(x = Ozone, color = Site.Name)) +
   geom_freqpoly(stat = "count")
+```
+###Higher tail for Blackstone
+
+
 
 # Format as a t-test
+```{r}
 O3.twosample <- t.test(EPAair$Ozone ~ EPAair$Site.Name)
 O3.twosample
 O3.twosample$p.value
+```
+###How would we write this as an equation?
+###y=Blackstone(38.48)+Bryson City(35.18) + E
+
+
 
 # Format as a GLM
+```{r}
 O3.twosample2 <- lm(EPAair$Ozone ~ EPAair$Site.Name)
 summary(O3.twosample2)
 ```
+###intercept is Blackstone site
+###Bryson city mean is 38.4825-3.29=35.18
+
 ### Non-parametric equivalent of t-test: Wilcoxon test
 
 When we wish to avoid the assumption of normality, we can apply *distribution-free*, or non-parametric, methods in the form of the Wilcoxon rank sum (Mann-Whitney) test. The Wilcoxon test replaces the data by their rank and calculates the sum of the ranks for each group. Notice that the output of the Wilcoxon test is more limited than its parametric equivalent.
@@ -116,8 +177,11 @@ O3.onesample.wilcox
 O3.twosample.wilcox <- wilcox.test(EPAair$Ozone ~ EPAair$Site.Name)
 O3.twosample.wilcox
 ```
+###The Wilcox test says that the means of the populations are significantly different, but won't tell us what the means actually are-has less explanatory power
+###Wilcox test gives us a V statistic for a one-sample test, and a W for a two-sample test
 
-### One-way ANOVA
+
+# One-way ANOVA
 A one-way ANOVA is the same test in practice as a two-sample t-test but for three or more groups. In R, we can  run the model with the function `lm` or `aov`, the latter of which which will allow us to run post-hoc tests to determine pairwise differences.
 
 Are PM2.5 levels different between Blackstone, Bryson City, and Triple Oak?
@@ -126,33 +190,73 @@ shapiro.test(EPAair$PM2.5[EPAair$Site.Name == "Blackstone"])
 shapiro.test(EPAair$PM2.5[EPAair$Site.Name == "Bryson City"])
 shapiro.test(EPAair$PM2.5[EPAair$Site.Name == "Triple Oak"])
 
+
+```
+
+#Plot EPA air data to look at normality
+```{r}
 ggplot(EPAair, aes(x = PM2.5, color = Site.Name)) +
   geom_freqpoly(stat = "count")
 qqnorm(EPAair$PM2.5); qqline(EPAair$PM2.5)
+```
+###No crazy skewed tails, so proceed with ANOVA
+###The qqnorm plot shows that the data adheres to normality except for the tails-not suprrising for environmental data 
+
+
+#Bartlett Test
+```{r}
 
 bartlett.test(EPAair$PM2.5 ~ EPAair$Site.Name)
+```
 
 # Format as a GLM
+```{r}
 PM2.5.anova <- lm(EPAair$PM2.5 ~ EPAair$Site.Name)
 summary(PM2.5.anova)
+```
+If you try to predict PM2.5 values, you mighgt predict:
+y=36.7(Blackstone)-4.266(Bryson City)-3.24(Triple Oak) + E
 
-# Format as an aov
+
+
+# Format as an aov (same as above except not using lm )
+```{r}
 PM2.5.anova2 <- aov(EPAair$PM2.5 ~ EPAair$Site.Name)
 summary(PM2.5.anova2)
+```
+###Just tells us whether site is a significant predictor-doesnt' say which of the sites is significant
 
-# Run a post-hoc test for pairwise differences
+
+
+
+
+
+# Run a post-hoc test for pairwise differences (only for aov)
+```{r}
 TukeyHSD(PM2.5.anova2)
+```
+###Gives us differences in means for each of the pairings
+###Triple Oak and Blackstone have different means, Bryson City and Blackstone have different means, while Triple Oak and Brysons city's means aren't significantly different
+
 
 # Plot the results
 # How might you edit this graph to make it attractive?
 # How might you illustrate significant differences?
+```{r}
 PM2.5.anova.plot <- ggplot(EPAair, aes(x = Site.Name, y = PM2.5)) +
   geom_violin(draw_quantiles = 0.5)
 print(PM2.5.anova.plot)
 ```
+###Means are the horizontal lines
+###Blackstone has higher mean than other two sites(horizontal line).
+###Brysons City and Truple Oak's means are not significantly different
+Show that Blackstone is different from other two:
+You could put a star above blackstone to show that it's different from other, or add a caption to plot using (geom_text)
 What information does the output give us? How might we report this information in a report?
 
-> ANSWER:
+> ANSWER: Blackstone has a higher concentration of PM2.5 on average  than Bryson City and Triple Oak. Bryson City and Triple Oak did not have signfiicantly different PM2.5 values over the data's time period
+(Anova Test; p<0.0001, F=16.16, df=1898)
+
 
 ### Non-parametric equivalent of ANOVA: Kruskal-Wallis Test
 As with the Wilcoxon test, the Kruskal-Wallis test is the non-parametric counterpart to the one-way ANOVA. Here, the data from two or more independent samples are replaced with their ranks without regard to the grouping AND based on the between-group sum of squares calculations. 
@@ -171,28 +275,51 @@ PM2.5.kw
 # dunnTest(EPAair$PM2.5, EPAair$Site.Name)                    #From package FSA
 ```
 
-## TWO-WAY ANOVA
+
+
+
+#TWO-WAY ANOVA
+
 ### Main effects
 A two-way ANOVA allows us to examine the effects of two categorical explanatory variables on a continuous response variable. Let's look at the NTL-LTER nutrient dataset for Peter and Paul lakes. What if we wanted to know if total nitrogen concentrations differed based on lake and depth? 
 
+Say we have y=alpha1 + alpha2 + alphaB1 + alpha B2 + E
+Total Nitrogen=309(Paul Lake)+ 105(Peter Lake)+97(lake ID 2)+....+E
+
+###We'll predict our means based on the grouping for the first alpha level and the grouping for the second alpha level
 ```{r}
 TNanova.main <- lm(PeterPaul.nutrients$tn_ug ~ PeterPaul.nutrients$lakename + PeterPaul.nutrients$depth_id)
 summary(TNanova.main)
+```
 
+
+#Does same thing as above but with an ANOVA
+
+```{r}
 TNanova.main2 <- aov(PeterPaul.nutrients$tn_ug ~ PeterPaul.nutrients$lakename + PeterPaul.nutrients$depth_id)
 summary(TNanova.main2)
 
 TukeyHSD(TNanova.main2)
 
+```
+
+
+
 # Plot the results
 # How might you edit this graph to make it attractive?
 # How might you illustrate significant differences?
+
+```{r}
 TNanova.plot <- ggplot(PeterPaul.nutrients, aes(x = lakename, y = tn_ug, color = depth_id)) +
   geom_boxplot()
 print(TNanova.plot)
 ```
+###A lot of nitrogen at Depth=7
+Means for peter Lake are slightly higher than for Paul Lake
 
-### Interaction effects
+
+
+# Interaction effects
 We may expect the effects of lake and depth to be dependent on each other. For instance, since depth_id is standardized across lakes, the concentrations at each depth_id might depend on which lake is sampled. In this case, we might choose to run an interaction effects two-way ANOVA, which will examine the individual effects of the explanatory variables as well as the interaction of the explanatory variables.
 
 The output gives test statistics for each explanatory variable as well as the interaction effect of the explanatory variables. If the p-value for the interaction effect is less than 0.05, then we would consider the interaction among the explanatory variables to be significant.
@@ -202,13 +329,16 @@ TNanova.interaction <- aov(PeterPaul.nutrients$tn_ug ~ PeterPaul.nutrients$laken
 summary(TNanova.interaction)
 
 ```
+###Shows us that the interaction is significant
 
-If the interaction is significant, we interpret pairwise differences for the interaction. If the interaction is not significant, we interpret differences for the main effects only.
+###If the interaction is significant, we interpret pairwise differences for the interaction. If the interaction is not significant, we interpret differences for the main effects only.
 ```{r}
 TukeyHSD(TNanova.interaction)
 ```
 
 Pairs are considered to be in the same grouping if the p-value for that pairing is > 0.05. It is easy to see that this grouping process can become complicated when many factors are present for each variable! For a challenge, try writing code that will generate groupings for each factor level in the dataset using the `glht` function in the `multcomp` package. 
+###glht function from multcomp generates groupings of variables
+
 
 ### Exercise
 

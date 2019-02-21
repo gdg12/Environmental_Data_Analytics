@@ -7,7 +7,7 @@ geometry: margin=2.54cm
 fig_width: 5
 fig_height: 2.5
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## LESSON OBJECTIVES
@@ -24,8 +24,7 @@ Why is data exploration our first step in analyzing a dataset? What information 
 ```{r}
 # 1. Set up your working directory
 
-
-getwd()
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Processed")
 
 # 2. Load packges
 library(tidyverse)
@@ -86,8 +85,8 @@ help(as.Date)
 
  ##djust date formatting for today
 ###Write code for three different date formats. 
- An example is provided to get you started.
- (code must be uncommented)
+ ##An example is provided to get you started.
+ ###(code must be uncommented)
 
 today <- Sys.Date()
 today
