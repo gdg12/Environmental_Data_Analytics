@@ -208,10 +208,10 @@ display.brewer.all(n = 9)
 
 
 ```{r}
-NvsP <-
-  ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth, shape = lakename)) +
-  geom_point() 
-print(NvsP)
+###NvsP <-
+ ### ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth, shape = lakename)) +
+ ## geom_point() 
+###print(NvsP)
 ```
 
 

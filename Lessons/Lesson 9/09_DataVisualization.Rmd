@@ -302,7 +302,7 @@ print(NvsP)
 # Add a line of best fit for the linear regression of these variables.
 
   
-```
+
 
 ### Plotting continuous vs. categorical variables
 

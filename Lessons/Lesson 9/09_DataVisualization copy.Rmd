@@ -20,7 +20,7 @@ setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/
 library(tidyverse)
 
 PeterPaul.chem.nutrients <- read.csv("NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
-PeterPaul.nutrients.gathered <- read.csv("NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv")
+PeterPaul.nutrients.gathered <- read.csv("PeterPaulNutrientsGathered.csv")
 PeterPaul.chem.nutrients.summaries <- read.csv("NTL-LTER_Lake_Summaries_PeterPaul_Processed.csv")
 EPAair <- read.csv("EPAair_O3_PM25_NC1718_Processed.csv")
 attach(EPAair)
