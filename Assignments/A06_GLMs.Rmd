@@ -27,9 +27,11 @@ This will save the PDF output in your Assignments folder.
 
 The completed exercise is due on Tuesday, 26 February, 2019 before class begins.
 
+# Set up your session 
 
-#1. 
-Set up your session. Upload the EPA Ecotox dataset for Neonicotinoids and the NTL-LTER raw data file for chemistry/physics. 
+
+
+1. Set up your session. Upload the EPA Ecotox dataset for Neonicotinoids and the NTL-LTER raw data file for chemistry/physics. 
 
 ```{r}
 setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Raw")
@@ -49,8 +51,7 @@ PeterPaul.chem.nutrients <- read.csv("NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
 ```
 
 
-#2. 
-Build a ggplot theme and set it as your default theme.
+2. Build a ggplot theme and set it as your default theme.
 ```{r}
 library(ggthemes)
 gabytheme <- theme_bw(base_size = 14) + 
@@ -64,19 +65,14 @@ legend.position = "top", legend.background = element_rect(fill="white", color="b
 
 ```
 
-###Set gabytheme as my default theme
-```{r}
-theme_set(gabytheme)
-```
 
 
 # Neonicotinoids test
 Research question: Were studies on various neonicotinoid chemicals conducted in different years? 
 
-#3. 
-Generate a line of code to determine how many different chemicals are listed in the Chemical.Name column.
+3. Generate a line of code to determine how many different chemicals are listed in the Chemical.Name column.
 ```{r}
-levels(Neonicotinoids$Chemical.Name)
+str(Neonicotinoids$Chemical.Name)
 ```
 
 
@@ -84,25 +80,25 @@ levels(Neonicotinoids$Chemical.Name)
 ```{r}
 shapiro.test(Neonicotinoids$Pub..Year)
 ```
-We can reject the null hypothesis that the Publication years variable is distributed normally. (Test: Shapiro Wilks, W=0.854, p<2.2e-16)
+###We can reject the null hypothesis that the Pub..year variable is distributed normally. 
 
 
 ###QQPlot shows that data is definitely not normally distributed!
 ```{r}
-qqnorm(Neonicotinoids$Pub..Year)
-qqline(Neonicotinoids$Pub..Year)
+qqnorm(Neonicotinoids$Pub..Year); qqline(Neonicotinoids$Pub..Year)
 ```
+###No, the publication years are not following a normal distribution
 
 
 
-#4.
 
-Are the publication years associated with each chemical well-approximated by a normal distribution? Run the appropriate test and also generate a frequency polygon to illustrate the distribution of counts for each year, divided by chemical name. Bonus points if you can generate the results of your test from a pipe function. No need to make this graph pretty.
-\pagebreak
+4. Are the publication years associated with each chemical well-approximated by a normal distribution? Run the appropriate test and also generate a frequency polygon to illustrate the distribution of counts for each year, divided by chemical name. Bonus points if you can generate the results of your test from a pipe function. No need to make this graph pretty.
 
 
-```{r, warning=FALSE, message=FALSE, fig.width=10}
+```{r, warning=FALSE, message=FALSE}
 library(scales)
+
+
 
 PubYearPlot <-
   ggplot(Neonicotinoids) +
@@ -112,37 +108,38 @@ print(PubYearPlot)
 ```
 
 
-
 5. Is there equal variance among the publication years for each chemical? Hint: var.test is not the correct function.
 
-###Use bartlett.test for non-normal distributions(var.test is for normallly distributed populations)
+###Use bartlett.test for non-normal distributions
 ```{r}
 bartlett.test(Neonicotinoids$Pub..Year~Neonicotinoids$Chemical.Name)
 
+
 ```
-###Results: (Bartlett Test: K-Squared=139.59, df=8, p<2.2e-16). Based on the results of the Bartlett test, there is not equal variance among the publication years because the p-value of the test is <0.05, which means that we reject the null hypothesis that the variances are the same amongst the publication years for each chemical. 
+###No, there is not equal variance among the publication years because the p-value of the test is <0.0001, which means that we reject the null hypothesis that the variances are the same amongst the publication years for each chemical. 
 
+###Levene.test
+```{r}
+library(car)
+leveneTest(Pub..Year~Chemical.Name, data=Neonicotinoids)
+```
 
+6. Based on your results, which test would you choose to run to answer your research question?
 
-#6. Based on your results, which test would you choose to run to answer your research question?
+> ANSWER: I would choose the Levene's Test for Homogenity of Variances because it's not sensitive to departures from non-normality.
 
-> ANSWER: The research question is "Were studies on various neonicotinoid chemicals conducted in different years?" We have a Continuous response variable of Publication Year, which is an integer, and we have one categorical explanatory variable with 9 levels, which is the Chemical Name variable. I would run a Kruskal-Wallis Test for this research question. The Kruskal Wallis test is the non-parametric counterpart to the one-way ANOVA. The One-way ANOVA compares the means of the samples or groups in order to make inferences about the population means; there is only one independent variable or factor. Because our dependent variable has a non-normal distribution, we should use the Kruskal-Wallis instead of a regular one-way ANOVA. 
+7. Run this test below. 
 
-
-
-#7.
-Run this test below. 
 
 ```{r}
-NeoANOVA<- kruskal.test(Neonicotinoids$Pub..Year ~ Neonicotinoids$Chemical.Name)
+library(car)
+leveneTest(Pub..Year~Chemical.Name, data=Neonicotinoids)
 
-NeoANOVA
 ```
 
 
 #8
-
-Generate a boxplot representing the range of publication years for each chemical. Adjust your graph to make it pretty.
+8. Generate a boxplot representing the range of publication years for each chemical. Adjust your graph to make it pretty.
 
 ```{r}
 library(dplyr)
@@ -159,34 +156,42 @@ Neonicotinoids<- separate(Neonicotinoids, year, c("Y", "m", "d"))
 
 ```
 
-  
-  
-```{r, fig.width=11, warning=FALSE, message=FALSE}
+    
+     Generate a boxplot representing the range of publication years for each chemical. Adjust your graph to make it pretty.
+     
+```{r, fig.height =12, fig.width = 20, warning=FALSE, message=FALSE}
 library(scales)
 
-NeoPlot<-ggplot(Neonicotinoids, aes(x=Chemical.Name, y=Pub..Year, fill=Chemical.Name)) + 
-  geom_boxplot() +
+NeoPlot<-ggplot(Neonicotinoids, aes(x=Y, y=Conc..Mean..Std.)) + 
+  geom_boxplot(aes(x=Y, y=Conc..Mean..Std.,fill=Chemical.Name),size=0.8, width=1) +
 
-labs(title="The Effect of Chemical Name on Range of Publication Years",
-     x="Chemical Name", y="Publication Year") +
-theme(legend.title = element_text(colour="IndianRed", size=23, face="bold"))+ 
- scale_fill_brewer(palette="Set3")   #use scale_fill_brewer for boxplots 
+  
+  labs(title="The Effect of Publication Year and Chemical Type on Mean Concentration", x="Publication Year", y="Mean Concentration(AI mg/L)") +
+  
+theme(legend.title = element_text(colour="IndianRed", size=23, face="bold"))+ ylim(0,6000)+
+  gabytheme+
+  scale_fill_brewer(palette="Set1")   #use scale_fill_brewer for boxplots
+            
 print(NeoPlot)
  
 ```
 
 
-#9
+
+
+
 9. How would you summarize the conclusion of your analysis? Include a sentence summarizing your findings and include the results of your test in parentheses at the end of the sentence. 
 
-> ANSWER: Based on the results of my statistical tests and data visualization, the publication years for each of the 9 chemicals do not follow a normal distribution. There is a significant difference between the publication years across chemical types. (Kruskal-Wallis Non-Parametric Test, df=8, p<2.2e-16, Kruskal Wallis Chi Squared=134.15)
+> ANSWER: 
+
 
 
 
 ## NTL-LTER test
 Research question: What is the best set of predictors for lake temperatures in July across the monitoring period at the North Temperate Lakes LTER? 
 
-#11
+
+
 
 11. Wrangle your NTL-LTER dataset with a pipe function so that it contains only the following criteria: 
 
@@ -213,7 +218,7 @@ qqline(PeterPaulJulyFiltered$temperature_C)
 ```
 ###Dependent variable is not normally distributed
 
-```{r, warning=FALSE, message=FALSE}
+```{r}
 ggplot(PeterPaulJulyFiltered, aes(x = year4)) +
   geom_histogram(stat = "count")
 
@@ -228,28 +233,27 @@ ggplot(PeterPaulJulyFiltered, aes(x =depth)) +
 
 #12
 
-Run an AIC to determine what set of explanatory variables (year4, daynum, depth) is best suited to predict temperature. 
+12. Run an AIC to determine what set of explanatory variables (year4, daynum, depth) is best suited to predict temperature. 
 ```{r}
 TempMod<-lm(data=PeterPaulJulyFiltered, temperature_C~year4+daynum+depth)
 
 summary(TempMod)
 ```
 
-##Use step function
+
 ```{r}
 step(TempMod)
 ```
-###Fullest model is best according to this Stepwise Algorithm function
+###It appears that the full model has the lowest AIC score. 
 
 
-##Check using Stepwise Model Reduction Process
 
-###Remove year4
+##Use Stepwise Model Reduction Process
 ```{r}
-TempMod2<-update(TempMod,.~.-year4)   
+TempMod2<-update(TempMod,.~.-year4)
 ```
 
-###Summary
+
 ```{r}
 summary(TempMod2)
 ```
@@ -261,7 +265,6 @@ summary(TempMod2)
 AIC(TempMod, TempMod2)
 ```
 ###Fullest Model is best
-
 
 ##Run a multiple regression on the recommended set of variables. 
 ```{r}
@@ -276,18 +279,17 @@ par(mfrow=c(2,2))
 plot(TempMod)
 ```
 
-#13
 
- What is the final linear equation to predict temperature from your multiple regression? How much of the observed variance does this model explain?
+13. What is the final linear equation to predict temperature from your multiple regression? How much of the observed variance does this model explain?
 
 > ANSWER:  
-Temperature=-6.45+0.01(year) +0.04(daynum)-1.95(depth) + E. 
-The Rsquared value is 0.74, which means my final model accounts for 74% of the variance of the dependent variable, temperature. (Test: Multiple Regression, p<2.2e-16, df=9718, R=0.74).
+
+Temperature=34-0.01(year) +0.04(daynum)-2.07(depth) + E
+The Rsqaured value is 0.81, which means my final model accounts for 81% of the data's variance. 
 
 
-#14
 
-Run an interaction effects ANCOVA to predict temperature based on depth and lakename from the same wrangled dataset.
+14. Run an interaction effects ANCOVA to predict temperature based on depth and lakename from the same wrangled dataset.
 
 ```{r}
 TempANCOVAMod<-lm(temperature_C~depth*lakename, data=PeterPaulJulyFiltered)
@@ -295,35 +297,25 @@ summary(TempANCOVAMod)
 ```
 
 
-###Summary
+
+
+15. Is there an interaction between depth and lakename? How much variance in the temperature observations does this explain?
+
+
+
+> ANSWER: Yes, there is a significant interaction between depth and lakename because the p-value of depth:lakenamePeter Lake is less than 0.0001. 
+
+16. Create a graph that depicts temperature by depth, with a separate color for each lake. Add a geom_smooth (method = "lm", se = FALSE) for each lake. Make your points 50 % transparent. Adjust your y axis limits to go from 0 to 35 degrees. Clean up your graph to make it pretty. 
+
 ```{r}
-summary.aov(TempANCOVAMod)
-```
-
-
-
-#15
-
- Is there an interaction between depth and lakename? How much variance in the temperature observations does this explain?
-
-> ANSWER: If the p-value for the interaction effect is less than 0.05, then we would consider the interaction among the explanatory variables to be significant. According to the above ANOVA summary using summary.aov function, there is a significant interaction bectween depth and lakename because the p value<2e-16 (Linear Regression; p<2e-16, df=8, F=48.64). Therefore, the interaction between depth and lake name is significant and should be included in the model. The adjusted r-squared, the modified R-sqaured adjusted for the number of predictors in the model, is 0.79, and thus, 79% of the variance in the response variable can be explained by the predictor variables. 
-
-
-
-#16
-
- Create a graph that depicts temperature by depth, with a separate color for each lake. Add a geom_smooth (method = "lm", se = FALSE) for each lake. Make your points 50 % transparent. Adjust your y axis limits to go from 0 to 35 degrees. Clean up your graph to make it pretty. 
-
-```{r, fig.width=12, fig.height=8, warning=FALSE, message=FALSE}
-TempbyDepthPlot<-ggplot(PeterPaulJulyFiltered, aes(x =depth, y =temperature_C, color=lakename)) +
-  geom_point(aes(x=depth, y=temperature_C), size=0.7, shape=16, alpha=0.5) +
-    geom_smooth(aes(x =depth, y =temperature_C, span=0.1, color=lakename),
-                method="lm", se=FALSE, linetype=1, size=0.5) +
-  labs(title="The Effect of Depth on Temperature", x="Depth of Lake (meters)",
-       y="Temperature (degrees C)") + gabytheme+
+TempbyDepthPlot<-ggplot(PeterPaulJulyFiltered, aes(x =depth, y =temperature_C, color=lakename, shape=lakename)) +
+  geom_point(aes(x =depth, y =temperature_C), size=0.7, shape=16, alpha=0.5) +
+    geom_smooth(aes(x =depth, y =temperature_C, span=0.1, color=lakename), method="lm", se=FALSE, linetype=1, size=0.5) +
+  labs(title="The Effect of Depth on Temperature", x="Depth of Lake (meters)", y="Temperature (degrees C)") + gabytheme+
   
-  theme(axis.text.y=element_text(angle = 35,  hjust = 1)) +
- scale_color_brewer(palette = "Paired")
+  theme(axis.text.y=element_text(angle = 35,  hjust = 1))+
+  scale_color_brewer(palette = "YlGnBu")
+
   print(TempbyDepthPlot)
 
 ```
