@@ -9,7 +9,7 @@ output:
     theme: "cosmo"
 geometry: margin=2.54cm
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 # LESSON OBJECTIVES
 1. Discuss the importance of location in environmental data analysis
@@ -30,7 +30,7 @@ In this lesson, we explore how data can be represented spatially, and how we can
 
 # 1. REPRESENTING SPATIAL DATA IN R: 
 ## The vector (vs raster) data model
-Spatial data are modeled in two formats: vector and raster. Today, we'll be concentrating on vector data, returning to raster a bit later. With vector data, features are represented with a combination of three elements: **geometry**, **attributes**, and a **coordinate reference system**, or `crs`. Let's talk about the first two and then come back to the crs a bit later. 
+Spatial data are modeled in two formats: vector and raster. Today, we'll be concentrating on vector data, returning to raster a bit later. With vector data, features are represented with a combination of three elements: **geometry** (where they are on the map and their shape), **attributes*(properties of the feature-ex a road name)*, and a **coordinate reference system**, or `crs`. Let's talk about the first two and then come back to the crs a bit later. 
 
 
 ### Feature _geometries_
@@ -54,19 +54,30 @@ When we combine geometries with attributes we get a **spatially enabled datafram
 #Import the tidyverse libary 
 library(tidyverse, quietly = TRUE)
 
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Data/Raw")
 #Read the data 2017 Ozone data
-EPAair_PM25_NC2018_raw <- read.csv("./Data/Raw/EPAair_PM25_NC2018_raw.csv")
+EPAair_PM25_NC2018_raw <- read.csv("EPAair_PM25_NC2018_raw.csv")
+
+```
+
 
 #Reduce our data to just one record for each location, computing mean and max daily AQI values
+```{r}
 EPAair_PM_avg <- EPAair_PM25_NC2018_raw %>% 
   group_by(Site.Name, COUNTY, SITE_LATITUDE, SITE_LONGITUDE) %>% 
   summarize(meanPM = mean(Daily.Mean.PM2.5.Concentration),
             maxPM = max(Daily.Mean.PM2.5.Concentration))
+```
+
+
 
 #Plot the data using longitude and latitude as X and Y
+```{r, fig.height=7, fig.width=5}
 ggplot(EPAair_PM_avg, aes(x=SITE_LONGITUDE, y=SITE_LATITUDE)) + 
-  geom_point(aes(color=meanPM), size=4) #+ coord_equal() 
+  geom_point(aes(color=meanPM), size=4) + coord_equal() #scales x and y values 
 ```
+
+
 
 This is more of a proof of concept than a useful map. We can sort of visualize spatial patterns in the data, but without context of scale or location, it's somewhat difficult. We can greatly improve this map with the help of some mapping packages for R...
 
@@ -75,17 +86,20 @@ This is more of a proof of concept than a useful map. We can sort of visualize s
 See https://rdrr.io/cran/mapview/man/mapviewOptions.html for more info.
 ```{r Plot EPA locations with `mapview`}
 #(Install and) Load the mapView package
-#install.packages('mapview')
+install.packages('mapview')
 library(mapview)
 
 #Set the available map backgrounds
 mapviewOptions(basemaps = c('OpenStreetMap','Esri.WorldImagery','Stamen.Toner','Stamen.Watercolor'))
 
+###Set basemaps
+
+
 #Create a mapView map from our EPA data
-myMap = mapview(EPAair_PM_avg,
-         xcol = "SITE_LONGITUDE",
-         ycol = "SITE_LATITUDE", 
-         crs = 4269, 
+myMap = mapview(EPAair_PM_avg,   ###dataframe
+         xcol = "SITE_LONGITUDE",  #xvalue-must be longitude
+         ycol = "SITE_LATITUDE",    #yvalue-must be latitude
+         crs = 4269,           #coordinate reference system
          grid = FALSE)
 
 #Show the map
@@ -103,27 +117,37 @@ Much better, no? And interactive! But while MapView loosely follows a familiar g
 See http://rstudio.github.io/leaflet/ for more info
 ```{r Plot with leaflet}
 #Import libraries 
-#install.packages('leaflet')
+install.packages('leaflet')
 library(leaflet)
+```
 
 #Create the map and add Tiles
-myMap  <- leaflet(data=EPAair_PM_avg) %>% 
-  addTiles() %>% 
+```{r}
+myMap  <- leaflet(data=EPAair_PM_avg) %>%   ###dataframe
+  addTiles() %>% ##tiles are the background maps-default tile is the open street map. GGMap uses Google Map as a reference map
   addCircleMarkers(~SITE_LONGITUDE,~SITE_LATITUDE,
-                   radius=(~meanPM*2),
+                   radius=(~meanPM*2),  ##scaled mean particulate values
                    stroke = FALSE, 
                    fillOpacity = 0.3,
-                   popup = ~as.character(`Site.Name`))
+                   popup = ~as.character(`Site.Name`))  ###designate field to popup, and you can size and color it by attributes
+
+###If you put map in viewer (not in console, click publish to publish map to the internet using Rpubs)
+```
+
+
 #Show the map
+```{r}
 myMap
 ```
+
+
 
 There's much more we can do to make these maps prettier and more powerful, but we'll come back to that. But take time to notice the power of mapping: like previous plots, we are able to interpret patterns in our dataset, but in geographically mapping our data, we can visualize these patterns in a much richer context by viewing them next to other spatial datasets (e.g. our basemaps). 
 Ok, let's continue talking about spatial features in the vector model...
 
 
 ## STORING GEOMETRIES IN R
-In our EPA example, we used a _coordinate pair_ (e.g. Latitude/Longitude) to represent the location of our point features. _But how might line and polygon features represented?_ 
+In our EPA example, we used a _coordinate pair (e.g. Latitude/Longitude) to represent the location of our point features. _But how might line and polygon features represented?
 
 Well, a line is simply a sequence of points (often called _vertices_ in this context), and so line features can be represented as a series of point coordinates. 
 
@@ -135,6 +159,9 @@ Thinking back to our EPA dataset, however, it seems quite a bit more cumbersome 
 
 So how are geometries usually stored and dealt with in R? **Enter the `sf` package.**
 
+###Geometry will be a column, with (x,y) coordinates as observations. There will be two or more coordinate points for each observation
+
+
 ## SIMPLE FEATURES & THE `sf` PACKAGE
 While the `sp` package was the first to handle vector spatial data, it was replaced with the `sf` package in 2016, and that made our lives easier. Short for "Simple Features", the `sf` package includes a structured format for storing geometries in spatially-enabled dataframes, solving the issue we just mentioned about storing gobs of coordinate pairs. 
 
@@ -145,38 +172,80 @@ Let's explore a few examples to familiarize ourselves with the `sf` package.
 First, let's convert our EPA dataframe to a simple features ("sf") dataframe and explore what's different:
 ```{r Create simple features from lat/lng fields}
 #Import the sf library
-#install.packages('sf')
+install.packages('sf')
 library(sf)
+```
+
 
 #Convert the dataset to a spatially enabled "sf" data frame
+```{r}
 EPAair_PM_avg_sf <- st_as_sf(EPAair_PM_avg,coords = c('SITE_LONGITUDE','SITE_LATITUDE'),crs=4326)
-
-#Do you see a new column name?                
-colnames(EPAair_PM_avg_sf)
-
-#What is the class of the values in the geometry column?
-class(EPAair_PM_avg_sf$geometry)
-
-#What does this look like
-head(EPAair_PM_avg_sf)
-
-#Plot the geometry...
-plot(EPAair_PM_avg_sf$geometry)
-
-#Plot everything
-plot(EPAair_PM_avg_sf)
-
-#Plot everything -- with MapView
-mapview(EPAair_PM_avg_sf)
-
-#Plot a single variable in mapviwe
-mapview(EPAair_PM_avg_sf['meanPM'])
-
-#With geometries now available in a column, we can use ggplot with the geom_sf object
-ggplot() + 
-  geom_sf(data=EPAair_PM_avg_sf, aes(color=meanPM), size=4)
+##st as sf converts data frame to st, which is a spatial feature data frame
+##also specifiy what columns define geometry
 
 ```
+
+
+#Do you see a new column name?  
+```{r}
+colnames(EPAair_PM_avg_sf)
+```
+###Now we have a geometry column
+
+
+#What is the class of the values in the geometry column?
+```{r}
+class(EPAair_PM_avg_sf$geometry)
+```
+
+
+
+#What does this look like
+```{r}
+head(EPAair_PM_avg_sf)
+```
+
+
+
+#Plot the geometry...specify geometry column
+```{r}
+plot(EPAair_PM_avg_sf$geometry)
+```
+##Shows points in gegraphic space
+If you don't specify specific attributes, this will plot all of the attributes
+
+
+#Plot everything
+```{r}
+plot(EPAair_PM_avg_sf)
+```
+
+
+
+#Plot everything -- with MapView
+```{r}
+mapview(EPAair_PM_avg_sf)
+```
+
+
+
+#Plot a single variable in mapviwe
+```{r}
+mapview(EPAair_PM_avg_sf['meanPM'])
+```
+
+
+
+#With geometries now available in a column, we can use ggplot with the geom_sf object
+
+```{r}
+ggplot() + 
+  geom_sf(data=EPAair_PM_avg_sf, aes(color=meanPM), size=4)
+```
+##geom_sf menas plot goemetry as a spatial feature. This shows our values asd a geometry specifying the data. It extracts location information from the geometry column. 
+##All of the points are colored by the attribute meanPM
+
+
 
 So, we see that our "sf" dataframe works much like our familiar dataframe, only it has a new column containing *geometries* for each record. This pretty much sums up what a GIS is: a familiar table of records and attributes (i.e. an "Information System"), but with one attribute that includes a geometry that allows us to incorporate geography into our analysis (i.e. a "*Geographic* Information System")!
 
@@ -184,15 +253,24 @@ So, we see that our "sf" dataframe works much like our familiar dataframe, only 
 ## SPATIAL ANALYSIS [First attempt]
 With our EPA data now spatially enabled, we can perform spatial analysis with the data. A simple analysis to buffer points a certain distance, done with the `st_buffer` operation. 
 
+
 ```{r Spatial Analysis: Geometric operations}
 #Buffer the Durham Armory point 0.1 degrees
 Durham_buffer <- EPAair_PM_avg_sf %>% 
   filter(Site.Name == 'Durham Armory') %>% 
-  st_buffer(0.1)
+  st_buffer(0.1)  #how many units of buffering-0.1 degrees, since our data is in longitude and latitude
+###Lat and long values are not distance units-they are angular units, and are points on a sphere
+
+```
+##Filter the original data frame only including Durham Armory value-one single row
 
 #View the result
+```{r}
 mapView(Durham_buffer)
 ```
+
+
+MastMaste
 
 In running the above, you get an warning and the shape looks elliptical, not circular. What's up? Well, it's time to chat about coordinate reference systems...
 
@@ -228,22 +306,36 @@ Some CRS, however, do not have an associated EPSG code, and for those, we can us
 #Recall what the CRS is of our EPA dataset
 st_crs(EPAair_PM_avg_sf)
 ```
-
+###The st_crs specifies what coordinate reference system the geometry uses. 
+###EPSG is a petroleum group=4326 refers to a specific coordinate system
+###proj4string tells us the projection name "longlat", the datum name(WGS84), and no other definitions
 Now look that EPSG up on http://spatialreference.org. 
 * What coordinate system this EPSG is associated with?
 * What is the extent of this projection? 
 * Is this a geographic or projected coordinate system? 
 * What Datum does it use? 
 
+well known text in html:
+
 
 ## SPATIAL ANALYSIS, Second attempt
 Applying our knowledge of CRS, let's transform our EPA sites from its native geographic coordinate system to a projected one, namely UTM Zone 17N and repeat what we attempted earlier. Then we'll revisit the buffer. 
 
 ```{r Transform our data to UTM 17 and buffer it}
-#Transform the entire EPA dataset to the UTM Zone 17N crs
+#Transform the entire EPA dataset to the UTM Zone 17N crs (world is cut up into different zones)
+###Take angular degrees and transform them into planar degres
+###Converts existing spatial data frame to coordinate reference system
 EPAair_PM_avg_sf_UTM <- st_transform(EPAair_PM_avg_sf, crs=26917)
 
+
+```
+
+
+
+
+
 #Rebuffer the Durham Armory site. Is it now circular? 
+```{r}
 DA_UTM_buffer <- EPAair_PM_avg_sf_UTM %>% 
   filter(Site.Name == 'Durham Armory') %>%     # Filter for the Durham Armory Site
   st_buffer(2000)                              # Buffer 2000 meters
@@ -251,24 +343,39 @@ DA_UTM_buffer <- EPAair_PM_avg_sf_UTM %>%
 mapView(DA_UTM_buffer)                         # View the results
 ```
 
+
 As we are now in a planar coordinate system, we can do some more spatial analysis... We'll examine one quick one - a distance analysis - as a quick preview, then more later after we add some other datasets...
 ```{r Distance analysis} 
-#Compute the distance between the Durham Armory site and all other sites
+#Compute the distance between the Durham Armory site and all other sites in EPA dataset
+
+###first we're filtering to the durham armory site
+###then, st_distance supplies an x and a y, the output is a list of pairwise distances
 Distances_to_DASite <- EPAair_PM_avg_sf_UTM %>% 
   filter(Site.Name == 'Durham Armory') %>%    #Subset the Durham Armory site
   st_distance(EPAair_PM_avg_sf_UTM) %>%       #Compute distances to all other sites
-  data.frame() %>%  t                         #Transpose the result
+  data.frame() %>%  t                         #Converts list to a data frame and Transpose the result
+
+
+```
+
+###This list has 24 entries
+
 
 #Add new field of distances to Durham Armory site
+```{r}
+
 EPAair_PM_avg_sf <- mutate(EPAair_PM_avg_sf,Dist2DA = Distances_to_DASite)
+```
+
 
 #Plot to see that it worked: larger = further?
+```{r}
+
 ggplot() + 
   geom_sf(data=EPAair_PM_avg_sf,aes(size=Dist2DA)) 
 ```
 
 
----
 # 2. WORKING WITH SPATIAL DATA
 Now that we have a feel for how vector spatial data are stored, let's dive deeper into what types of spatial analyses we can do. 
 * Reading shapefiles into R with `sf` (and selecting with `filter`)
