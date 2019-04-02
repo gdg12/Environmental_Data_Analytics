@@ -6,7 +6,7 @@ date: "Spring 2019"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## LESSON OBJECTIVES
@@ -76,7 +76,7 @@ Search one or more of these databases to find a dataset that interests you. What
 * TidyCensus: U.S. Census data
 * FedData: Geospatial data from federal sources
 * dataRetrieval: USGS and EPA water quality, streamflow, and metadata
-* LAGOSNE: Multiscaled geospatial and temporal data for U.S. lakes
+* LAGOSNE: Multiscaled geospatial and temporal data for U.S. lakes--->**will be used in Hydrologic Data Analytics next semester**
 
 ### Data scraping
 Sometimes, there may be data that we can access online but are not available in downloadable formats. Data scraping is a technique that allows us to convert unstructured data (e.g., those presented in a webpage) into a structured format (e.g., a csv file). 
@@ -93,7 +93,7 @@ Now that our selector gadget is in operation, we can start the data scraping pro
 
 ```{r, message = FALSE, warning = FALSE}
 library(tidyverse)
-#install.packages("rvest")
+install.packages("rvest")
 library(rvest)
 
 # Specify website to be scraped
@@ -102,51 +102,98 @@ url <- "https://en.wikipedia.org/wiki/List_of_rivers_by_length"
 # Reading the HTML code from the website
 webpage <- read_html(url)
 
+```
+
+
 # Grab specific components of the website
-Name = webpage %>% html_nodes("td:nth-child(2)") %>% html_text()
-Length.km = webpage %>% html_nodes("td:nth-child(3)") %>% html_text()
-DrainageArea.km2 = webpage %>% html_nodes("td:nth-child(5)") %>% html_text()
+```{r}
+Name<-webpage %>% html_nodes("td:nth-child(2)") %>% html_text()  ##htmlN0des points scraper towards nodes in webpage. Pipe to html_text tells it we want to generate html text
+```
+
+```{r}
+Length.km<-webpage %>% html_nodes("td:nth-child(3)") %>% html_text()
+```
+
+
+```{r}
+DrainageArea.km2<-webpage %>% html_nodes("td:nth-child(5)") %>% html_text()
+```
+
+```{r}
 Discharge.m3s = webpage %>% html_nodes("td:nth-child(6)") %>% html_text()
+```
+
+```{r}
 Outflow = webpage %>% html_nodes("td:nth-child(7)") %>% html_text()
+```
+
+
+##Look at components of "Name"
+```{r}
+Name
+```
+
 
 # Coerce into a data frame, ensure consistent lengths
-riverdata <- data_frame(Name = Name[7:189], 
-                        Length.km = Length.km[2:184], 
+```{r}
+riverdata <- data_frame(Name = Name[6:188],   ###Make a data frame, grab specific lines from Name column on Wiki
+                        Length.km = Length.km[2:184],   ###get 183 rows in final dataframe from Length column on Wiki
                         DrainageArea.km2 = DrainageArea.km2[2:184], 
                         Discharge.m3s = Discharge.m3s[2:184], 
                         Outflow = Outflow)
+```
+###This data frame has commas in numbers, and R will read them as character or factors instead of numbers. Can't have commas in R.
+
 
 # Remove unnecessary text from within cells
-riverdata$Name <- str_replace(riverdata$Name, "\\[.*\\]", "")
-riverdata$Name <- str_replace(riverdata$Name, "\n", "")
+```{r}
+riverdata$Name <- str_replace(riverdata$Name, "\\[.*\\]", "") ###Looks for square brackets and removes anything inside the square brackets and the brackets themselves (such as citations from Wikipedia)
+riverdata$Name <- str_replace(riverdata$Name, "\n", "")  ###Take characters consisting of \n and replacing it with nothing
 
+```
+###Now we can call up the River Names like we do normally
 
+```{r}
 riverdata$Length.km <- str_replace(riverdata$Length.km, "\\*", "")
 riverdata$Length.km <- str_replace(riverdata$Length.km, "\\(.*\\)", "")
 riverdata$Length.km <- str_replace(riverdata$Length.km, "\\[.*\\]", "")
+```
+###Removes 
 
+```{r}
 riverdata$DrainageArea.km2 <- str_replace(riverdata$DrainageArea.km2, " \\(.*\\)", "")
 riverdata$DrainageArea.km2 <- str_replace(riverdata$DrainageArea.km2, "\\(.*\\)", "")
 riverdata$DrainageArea.km2 <- str_replace(riverdata$DrainageArea.km2, " \\[.*\\]", "")
+```
 
+```{r}
 riverdata$Discharge.m3s <- str_replace(riverdata$Discharge.m3s, " \\(.*\\)", "")
 riverdata$Discharge.m3s <- str_replace(riverdata$Discharge.m3s, "\\[.*\\]", "")
+```
+
 
 # Turn numeric values from character to numeric
-riverdata$Length.km <- as.numeric( sub(",", "", riverdata$Length.km))
-riverdata$DrainageArea.km2 <- as.numeric( sub(",", "", riverdata$DrainageArea.km2))
+```{r}
+riverdata$Length.km <- as.numeric( sub(",", "", riverdata$Length.km)) ##Tell as.numeric to have substitute-replace the comma with nothing. This also adds NAs into blank cells. 
+riverdata$DrainageArea.km2 <- as.numeric( sub(",", "", riverdata$DrainageArea.km2)) ###Substitute commas with nothing
 riverdata$Discharge.m3s <- as.numeric( sub(",", "", riverdata$Discharge.m3s))
-  
+```
+
+
 # Plot the relationships
+```{r}
 ggplot(riverdata, aes(x = Length.km, y = Discharge.m3s, fill = DrainageArea.km2)) + 
-  #geom_label(data = subset(riverdata, Name == "Yukon" | Name == "Lower Tunguska"), 
-            # aes(label = Name), alpha = 0.8, nudge_x = 100, nudge_y = 0.15) +
-  geom_point(shape = 21, size = 3, alpha = 0.8) + 
+geom_label(data = subset(riverdata, Name == "Yukon" | Name == "Lower Tunguska"), aes(label = Name), alpha = 0.8, nudge_x = 100, nudge_y = 0.15) +
+  geom_point(shape = 21, size = 3, alpha = 0.8) + ###use this to label outliers or interesting data points
   scale_fill_viridis_c(option = "inferno", begin = 0.2, end = 0.9, direction = -1) +
   theme_classic() + 
-  #scale_y_log10() +
+  scale_y_log10() + ###this will give us a log scale on the Y-axis, so our data points fill the plot more evenly
   labs(x = "Length (km)", y = expression("Discharge (m"^"3"*" s"^"-1"*")"), 
        fill = expression("Drainage Area (km"^"2"*")")) +
   theme(legend.position = "top", legend.key.width = unit(1, "cm"))
 ```
+###The Amazon River has extremely high discharge, which is why it's an outlier.
+
+
+
 
