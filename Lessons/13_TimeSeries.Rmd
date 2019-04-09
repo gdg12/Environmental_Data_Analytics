@@ -103,6 +103,8 @@ Next, we will determine the degree of temporal autocorrelation in our dataset. W
 
 Temperatures on a single day are dependent on temperatures earlier in the season
 ```{r}
+library(nlme)
+library(lme4)
 # Determine autocorrelation in residuals
 TempTest.auto <- lme(data = PeterPaul.summertemp,
                      temperature_C ~ sampledate * lakename, #fixed effects ANCOVA model with an interaction term
@@ -111,6 +113,7 @@ TempTest.auto <- lme(data = PeterPaul.summertemp,
 #lme-mixed effects function
 
 TempTest.auto
+summary(TempTest.auto)
 ```
 
 #Random effects: 

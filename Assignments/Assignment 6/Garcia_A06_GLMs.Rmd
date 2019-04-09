@@ -237,6 +237,7 @@ summary(TempMod)
 
 ##Use step function
 ```{r}
+library(stats)
 step(TempMod)
 ```
 ###Fullest model is best according to this Stepwise Algorithm function

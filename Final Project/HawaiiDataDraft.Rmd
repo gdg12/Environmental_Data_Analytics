@@ -1,0 +1,750 @@
+---
+title: "Hawaii Water Data Exploration"
+author: "Gaby Garcia"
+date: "4/3/2019"
+output: pdf_document
+---
+
+#Research Question and Rationale
+
+ Which of the parameters have a relationship with dissolved oxygen concentrations? Of these relevant parameters, which have the most significant effect on dissolved oxygen concentrations over time?
+2. Do dissolved oxygen concentrations vary spatially across Hawaii? Based on the 373 sample locations, I will code them based on geographic region on the big island (ex. west, east, north, south).
+
+What are the water quality parameters that have a significant effect on Dissolved oxygen a concentrations? (multiple linear regression)
+
+
+#Dataset Information
+
+#Explatory Data Analysis and Wrangling 
+```{r setup}
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Final Project")
+HawaiiWater<-read.csv('HawaiiWaterDataProcessed.csv')
+```
+
+#Load Necessary Packages
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(tidyr)
+library(ggplot2)
+library(GGally)
+library(dplyr)
+library(plyr)
+library(lubridate)
+library(viridis)
+library(RColorBrewer)
+library(colormap)
+library(gridExtra)
+library(corrplot)
+library(nlme)
+library(lsmeans)
+library(multcompView)
+library(trend)
+library(mapview)
+library(leaflet)
+library(sf)
+library(car)
+library(stats)
+library(wesanderson)
+library(scales)
+```
+
+##Omit NA's from Data (GLM 12 lesson says to do so)
+```{r}
+HawaiiWaterClean<- na.omit(HawaiiWater) 
+```
+
+##Convert Station Number from Factor to Number
+```{r}
+HawaiiWaterClean$Station.No<-as.numeric(HawaiiWaterClean$Station.No)
+```
+
+```{r}
+HawaiiWaterCleanGrouped<-HawaiiWaterClean%>%group_by(Location)
+```
+
+
+
+##Filtering Data Set to Only Include Observations from Oahu
+```{r}
+HawaiiWaterCleanOahu <- 
+ HawaiiWaterClean %>%
+  dplyr::filter(Location== "Ala Moana Park, Ewa" | Location == "Ala Moana Park, Center"| Location == "Ala Moana Diamond Head"| Location == "Kahanamoku Beach"| Location == "Kahanamoku Lagoon Ewa end"| Location == "Kahanamoku Lagoon DH end"| Location == "Fort DeRussy Beach"| Location == "Gray's Beach"| Location == "Tavern Beach"| Location == "Kuhio Beach"| Location == "Queen's Beach"| Location == "Sand Island Pt. #2"| Location == "Mokuleia Shoreline"| Location == "Kaiaka Bay Shoreline"| Location == "Haleiwa Beach"| Location == "Waimea Bay Shoreline"| Location == "Laie Bay Shoreline"| Location == "Hauula Beach Park"| Location == "Punaluu Beach Park"| Location == "Kaaawa Beach Park"| Location == "Lualualei Pt. 4"| Location == "Makua Beach Shoreline"| Location == "Makaha Beach"| Location == "Maili Beach"| Location == "Nanakuli Beach"| Location == "Kahe Point"| Location == "Ewa Beach"| Location == "Kailua Beach"| Location == "Lanikai Beach Shoreline"| Location == "Waimanalo Bay Shoreline"| Location == "Waimanalo Beach"| Location == "Waimanalo Surfer's Beach"| Location == "Sandy Beach Pt. No. 1"| Location == "Hanauma Bay"| Location == "Kuliouou Beach Park"| Location == "Kahala Hilton Beach"| Location == "Kahala Beach Shoreline"| Location == "Kalama Beach"| Location == "Kualoa Beach"| Location == "Oneula Beach Park"| Location == "Nimitz Beach"| Location =="Waialae-Kahala Beach"| Location =="Yokohama"| Location =="Makapuu"| Location =="Chun's Reef"| Location =="Malaekahana Beach"| Location =="Magic Island Lagoon"| Location =="Pokai Bay"| Location =="Sunset Beach"| Location =="Waimanalo State Park"| Location =="Kaiona Beach"| Location =="San Souci"| Location =="Kahana Bay Beach"| Location =="Diamond Head - Showers"| Location =="Camp Erdman"| Location =="Nanaikapono Beach"| Location =="Point Panic"| Location =="Kakaako"| Location =="White Plains Beach"| Location =="Keehi"| Location =="Moana Beach
+"| Location =="Tongg's"| Location =="Kawaikui Beach Park"| Location =="Kanenelu Beach"| Location =="Kalae oio Beach Park"| Location =="Kaluanui Beach"| Location =="Kuilima Cove"| Location =="Banzai Beach"| Location =="Laniakea"| Location =="Haleiwa Ali'I Beach Park"| Location =="Maipalaoa Beach"| Location =="Ulehewa Beach"| Location =="Mauna Lahilahi Beach Park"| Location =="Ihilani-Kohola Lagoon"| Location =="Kokololio"| Location =="Kuilei Cliffs
+"| Location =="Kaluahole Beach"| Location =="Outrigger"| Location =="Halona Cove"| Location =="Kokee Beach Park"| Location =="Koko Kai Beach Park"| Location =="Laenani Park"| Location =="Kaneohe Bay at Kualoa"| Location =="Pounders
+"| Location =="Turtle Bay"| Location =="Kaunala Beach"| Location =="Pupukea at Shark's Cove"| Location =="Ehukai"| Location =="Kawailoa Beach"| Location =="Ihilani Naia"| Location =="Ihilani Honu"| Location =="Ewa Beach Residential"| Location =="Ohikilolo Beach"| Location =="Keaau Beach"| Location =="Puuohulu Beach"| Location =="Manner's Beach"| Location =="Kaalawai Beach"| Location =="Kahala at Kala Place"| Location =="Paiko Beach"| Location =="Niu Beach"| Location =="Maunalua Beach Park"| Location =="Wawamalu Beach
+"| Location =="Kualoa Sugar Mill Beach"| Location =="Swanzy Beach Park"| Location =="Makaua Beach"| Location =="Makao Beach"| Location =="Aukai Beach"| Location =="Kaipapau Beach"| Location =="Laniloa Beach"| Location =="Pipeline"| Location =="Mokuleia at Kaipoko"| Location =="Kaena Point"| Location =="Papaoneone Beach"| Location =="Waimanalo Gulch"| Location =="Ihilani Ulua"| Location =="Oneawa Beach"| Location =="Heeia Kea Small Boat Harbor"| Location =="Honomanu Bay Shoreline"| Location =="Hukilau Hotel Shoreline"| Location =="Waimea Bay Landing") 
+```
+
+
+#Recoding Geographical Observations to Regions in Oahu
+
+##Convert station number from number to factor
+```{r}
+HawaiiWaterCleanOahu$Station.No<-as.factor(HawaiiWaterCleanOahu$Station.No)
+```
+
+##Use Revalue function to recode 
+```{r}
+library(plyr)
+HawaiiWaterCleanOahu$Region<-revalue(HawaiiWaterCleanOahu$Station.No, c('28'='East', '39'='South', '40'='South','41'='South', '42'='South', '43'='South', '44'='South', '45'='South', '46'='South', '47'='South', '48'='South', '49'='South', '50'='South', '51'='North', '52'='North','53'='North', '54'='North', '56'='North', '57'='North', '58'='North', '60'='North', '61'='West', '62'='West', '63'='West', '64'='West', '65'='West', '66'='West', '67'='South', '68'='East', '69'='East', '70'='East', '71'='East', '72'='East', '73'='South', '74'='South', '75'='South', '76'='South', '77'='South', '78'='East', '79'='East', '80'='South', '81'='South', '82'='South', '83'='North', '84'='East', '85'='North', '86'='North', '87'='South', '88'='West', '89'='North', '90'='East', '91'='East', '92'='South', '94'='East', '95'='South', '96'='North', '97'='West', '98'='South', '99'='South', '100'='South', '101'='South', '103'='South', '104'='South', '105'='East', '106'='East', '107'='East', '108'='North', '109'='North', '110'='North', '111'='North', '112'='West', '113'='West', '114'='West', '115'='West', '116'='East', '118'='South', '119'='South', '120'='South', '121'='South', '122'='South', '123'='East', '124'='East', '126'='North', '127'='North', '128'='North', '129'='North', '130'='North', '131'='West', '132'='West', '133'='South', '134'='West', '135'='West', '136'='West', '137'='West', '138'='South', '139'='South', '140'='South', '141'='South', '142'='South', '144'='East', '145'='East', '146'='West', '147'='East', '148'='South', '149'='East', '150'='East', '152'='North', '154'='North', '155'='North', '157'='West', '158'='West', '159'='West', '160'='East', '161'='East', '164'='South', '165'='South', '173'='East', '221'='North'))
+```
+
+
+##Determine Number of Observations for Each Region in Oahu
+```{r}
+summary(HawaiiWaterCleanOahu$Region)
+```
+
+
+#Exploratory Data Analysis
+
+
+##Structure of Water Data
+```{r}
+str(HawaiiWaterCleanOahu)
+```
+
+##Summary of Water Data
+```{r}
+summary(HawaiiWaterCleanOahu)
+```
+
+
+##Dimensions of Data
+```{r}
+dim(HawaiiWaterCleanOahu)
+```
+
+##View First 10 Rows of Data Frame
+```{r}
+head(HawaiiWaterCleanOahu, 10)
+```
+
+##View all Column Names
+```{r}
+colnames(HawaiiWaterCleanOahu)
+```
+
+##Change Date from Factor to Date Object
+```{r}
+HawaiiWaterCleanOahu$Date<-as.Date(HawaiiWaterCleanOahu$Date, format = "%m/%d/%y") 
+```
+
+##Add a Week Column to Dataframe Using Mutate Function
+```{r}
+HawaiiWaterCleanOahu<-mutate(HawaiiWaterCleanOahu, Week = week(Date))
+```
+
+
+##Add a Month Column to DataFrame using Mutate Function
+```{r}
+HawaiiWaterCleanOahu<- mutate(HawaiiWaterCleanOahu, Month = month(Date))
+```
+
+##Add a Year Column to Dataframe using Mutate Function
+```{r}
+HawaiiWaterCleanOahu<- mutate(HawaiiWaterCleanOahu, Year = year(Date))
+```
+
+
+#Data Visualization
+
+##Set GGPlot Theme
+```{r}
+gabytheme <- theme_bw(base_size = 14) + 
+  theme(plot.title=element_text(face="bold", size="16", color="Indianred4", hjust=0.5),
+        axis.title=element_text(face="bold.italic", size=11, color="black"),
+axis.text = element_text(face="bold", size=10, color = "black"), 
+panel.background=element_rect(fill="white", color="darkblue"), 
+panel.border = element_rect(color = "black", size = 2),
+legend.position = "top", legend.background = element_rect(fill="white", color="black"),
+            legend.key = element_rect(fill="transparent", color="NA"))
+theme_set(gabytheme)
+```
+
+#Examine distributions of continuous variables: Temperature, pH, Dissolved Oxygen Concentrations, Salinity, Turbidity, and Enterococcus Concentrations
+
+##Temperature
+```{r}
+ggplot(HawaiiWaterCleanOahu) +
+  geom_histogram(aes(x =Temperature), bins = 50)
+```
+
+##QQNorm for Temperature
+```{r}
+ qqnorm(HawaiiWaterCleanOahu$Temperature) 
+qqline(HawaiiWaterCleanOahu$Temperature)
+```
+
+##LogTransform Temperature
+```{r}
+
+ qqnorm((HawaiiWaterCleanOahu$Temperature)^3.17)
+qqline((HawaiiWaterCleanOahu$Temperature)^3.17)
+```
+
+```{r}
+summary(powerTransform(HawaiiWaterCleanOahu$Temperature))
+```
+
+
+#Perform Shapiro Wilks Normality test for first 5,000 Temperature observations
+```{r}
+shapiro.test(HawaiiWaterCleanOahu$Temperature[0:5000])
+```
+
+###Summary of Temperature
+```{r}
+summary(HawaiiWaterCleanOahu$Temperature)
+```
+
+
+
+##pH
+```{r, message=FALSE}
+ggplot(HawaiiWaterCleanOahu) +
+  geom_histogram(aes(x =pH))
+```
+
+##QQNorm of pH
+```{r}
+ qqnorm(HawaiiWaterCleanOahu$pH) 
+qqline(HawaiiWaterCleanOahu$pH)
+```
+
+##Shapiro Wilks Test for pH
+```{r}
+shapiro.test(HawaiiWaterCleanOahu$pH[0:5000])
+```
+
+
+###Summary of pH
+```{r}
+summary(HawaiiWaterCleanOahu$pH)
+```
+
+
+
+
+##Dissolved Oxygen Concentrations
+```{r, message=FALSE}
+ggplot(HawaiiWaterCleanOahu) +
+  geom_histogram(aes(x =DO))
+```
+
+
+##QQNorm of DO
+```{r}
+ qqnorm(HawaiiWaterCleanOahu$DO) 
+qqline(HawaiiWaterCleanOahu$DO)
+```
+
+
+
+
+##Log Transform Dependent Variable DO
+```{r}
+qqnorm(log(HawaiiWaterCleanOahu$DO))
+qqline(log(HawaiiWaterCleanOahu$DO))
+```
+
+```{r}
+qqnorm(sqrt(HawaiiWaterCleanOahu$DO))
+qqline(sqrt(HawaiiWaterCleanOahu$DO))
+```
+
+##Use powertransform Function to generate estimation of Power Lambda that will normalize DV
+```{r}
+summary(powerTransform(HawaiiWaterCleanOahu$DO))
+```
+
+##Shapiro Wilks Test for DO
+```{r}
+shapiro.test(HawaiiWaterCleanOahu$DO[0:5000])
+```
+
+##Summary of DO
+```{r}
+summary(HawaiiWaterCleanOahu$DO)
+```
+
+
+##Percent Saturation of Dissolved Oxygen
+```{r, message=FALSE}
+ggplot(HawaiiWaterCleanOahu) +
+  geom_histogram(aes(x =PercentSaturationDissolvedOxygen))
+```
+
+##QQnorm of Percent Saturation of Dissolved Oxygen
+```{r}
+qqnorm(HawaiiWaterCleanOahu$PercentSaturationDissolvedOxygen) 
+qqline(HawaiiWaterCleanOahu$PercentSaturationDissolvedOxygen)
+```
+
+
+
+##Shapiro Test for Percent Saturation Dissolved Oxygen
+```{r}
+shapiro.test(HawaiiWaterCleanOahu$PercentSaturationDissolvedOxygen[0:5000])
+```
+
+
+##Summary of Percent Saturation of Dissolved Oxygen
+```{r}
+summary(HawaiiWaterCleanOahu$PercentSaturationDissolvedOxygen)
+```
+
+
+##Turbidity
+```{r, message=FALSE}
+ggplot(HawaiiWaterCleanOahu) +
+  geom_histogram(aes(x =Turbidity))+
+   scale_x_continuous(limits = c(0, 100))
+```
+
+##QQNorm of Turbidity
+```{r}
+qqnorm(HawaiiWaterCleanOahu$Turbidity) 
+qqline(HawaiiWaterCleanOahu$Turbidity)
+```
+
+##Shapiro Test for Turbidity
+```{r}
+shapiro.test(HawaiiWaterCleanOahu$Turbidity[0:5000])
+```
+
+
+##Summary of Turbidity
+```{r}
+summary(HawaiiWaterCleanOahu$Turbidity)
+```
+
+##Salinity
+```{r, message=FALSE}
+ggplot(HawaiiWaterCleanOahu) +
+  geom_histogram(aes(x =Salinity))
+```
+
+##QQNorm of Salinity
+```{r}
+qqnorm(HawaiiWaterCleanOahu$Salinity) 
+qqline(HawaiiWaterCleanOahu$Salinity)
+```
+
+##Shapiro Test for Salinity
+```{r}
+shapiro.test(HawaiiWaterCleanOahu$Salinity[0:5000])
+```
+
+
+##Summary of Salinity
+```{r}
+summary(HawaiiWaterCleanOahu$Salinity)
+```
+
+##Enterococcus
+```{r, message=FALSE}
+ggplot(HawaiiWaterCleanOahu) +
+  geom_histogram(aes(x =Enterococcus))
+```
+
+##QQNorm of Enterococcus
+```{r}
+qqnorm(HawaiiWaterCleanOahu$Enterococcus) 
+qqline(HawaiiWaterCleanOahu$Enterococcus)
+```
+
+
+##Shapiro Test for Enterococcus
+```{r}
+shapiro.test(HawaiiWaterCleanOahu$Enterococcus[0:5000])
+```
+
+
+##Summary of Enterococcus
+```{r}
+summary(HawaiiWaterCleanOahu$Enterococcus)
+```
+
+
+
+
+##Correlation Plot of Data
+```{r, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
+ggpairs(HawaiiWaterCleanOahu, columns = 8:15)
+```
+
+
+
+#Exploratary Facet of Dissolved Oxygen Concentrations by Region
+```{r, fig.height=7, fig.width=14, warning=FALSE, message=FALSE}
+library(scales)
+library(ggplot2)
+
+DOFacet<-
+  ggplot(HawaiiWaterCleanOahu, aes(x=Month, y=DO)) +
+  geom_point(size=0.5) +
+  facet_wrap(vars(Region), nrow = 4)+
+  labs(title="Dissolved Oxygen Concentrations by Region in Oahu", x="Month",
+       y="DO Concentration (mg/L)", hjust=0.5) +
+  theme(strip.text.x = element_text(size=12,face="bold", angle=360, color="white"),
+          strip.text.y = element_text(size=12, face="bold", color="white"),
+          strip.background = element_rect(colour="black", fill="#D2691E", size=1),
+        plot.title=element_text(face="bold", size="16", color="black", hjust=0.5))+
+  geom_smooth(aes(x =Month, y =DO, color=Region),
+                 se=FALSE, linetype=1, size=1)  
+  #scale_x_date(labels = date_format("%m"),breaks = date_breaks("1 month")) 
+ 
+
+print(DOFacet)
+```
+
+
+```{r, fig.height =8, fig.width = 10, warning=FALSE, message=FALSE}
+DOBoxplot<-ggplot(HawaiiWaterCleanOahu) + 
+  geom_boxplot(aes(x=Region, y=DO, fill=Region))  +
+  labs(title="Effect of Region on Range of Dissolved Oxygen Concentrations in Oahu", x="Region in Oahu", y="Dissolved Oxygen Concentration (mg/L)") +
+theme(legend.title = element_text(colour="IndianRed", size=16, face="bold")) +gabytheme +
+scale_fill_brewer(palette="Set3") 
+ 
+ 
+
+print(DOBoxplot)
+
+```
+
+
+
+
+
+
+
+#Research Question Number 1:
+Which of the parameters have a relationship with dissolved oxygen concentrations? Of these relevant parameters, which have the most significant effect on dissolved oxygen concentrations over time?
+
+
+###When I did the full maximal model with ALL interactions, the AIC of the maximal model was higher than the 12 subsequent reduced models-->Too many parameters with all of the interactions, so I decided to not include interactions. 
+
+
+##Full Maximal Model
+```{r, message=FALSE}
+attach(HawaiiWaterCleanOahu)
+HawaiiMod<-glm(DO~Enterococcus + Temperature +Salinity +pH + Turbidity + CP, data=HawaiiWaterCleanOahu, family="gaussian")
+summary(HawaiiMod)
+```
+
+
+##Remove Enterococcus Parameter
+```{r}
+HawaiiMod2<-update(HawaiiMod,.~.-Enterococcus)
+summary(HawaiiMod2)
+```
+
+##Remove CP Parameter
+```{r}
+HawaiiMod3<-update(HawaiiMod2,.~.-CP)
+summary(HawaiiMod3)
+```
+
+
+##AIC Test
+```{r}
+AIC(HawaiiMod, HawaiiMod2, HawaiiMod3)
+```
+
+
+##Check for Multicollinearity of Final Model
+```{r}
+vif(HawaiiMod3)
+```
+###Temperature, Salinity, pH, and Turbidity have a significant effect on DO Concentrations. 
+
+##Check Residuals of HawaiiMod3
+```{r}
+par(mfrow=c(2,2))
+plot(HawaiiMod3)
+```
+
+
+###Insert the following line of code into your R chunk. This will eliminate duplicate measurements on single dates for each site.
+```{r}
+HawaiiWaterCleanOahu$Station.No<-as.integer(HawaiiWaterCleanOahu$Station.No) ###Removing duplicate measurements requires Station.No to be an integer, not a factor like it is now
+HawaiiWaterCleanOahu2 = HawaiiWaterCleanOahu[order(HawaiiWaterCleanOahu[,'Date'],-HawaiiWaterCleanOahu[,'Station.No']),]
+HawaiiWaterCleanOahu2= HawaiiWaterCleanOahu[!duplicated(HawaiiWaterCleanOahu$Date),]
+```
+
+#Mixed Effects Model with Cleaned Data
+```{r}
+
+OahuMixed<- lme(data = HawaiiWaterCleanOahu2,
+                     DO~Date, #fixed effects model with an interaction term
+                     random = ~1|Location)           #specifying a random effect
+
+summary(OahuMixed)
+```
+
+
+
+##ACF
+```{r}
+ACF(OahuMixed)
+```
+0.12-12% of variability associated with time is autocorrelated from previous dates
+
+
+#Repeated Measures ANOVA Model
+```{r}
+OahuMixedMod<- lme(data = HawaiiWaterCleanOahu2,
+                      DO~Date, #fixed effects
+                     random = ~1|Location, #random effect
+                     correlation = corAR1(form = ~ Date|Location, value = 0.12),method = "REML")
+```
+
+##Summary of OahuMixedMod
+```{r}
+summary(OahuMixedMod)
+```
+###According to the summary of our mixed effects model, the coefficient for the parameter of Date is -0.000194 (p=0.14, t=-1.47, df=369). However, according to the summary, Date is not a significant predictor of PM2.5 concentration because the p-value for Date is 0.14, which is above 0.05. Thus, there is not a significant trend in DO Concentrations
+
+#Run a Fixed Effects Model with Date as the only predictor
+```{r}
+OahuFixedMod<- gls(data =HawaiiWaterCleanOahu2,
+                     DO~ Date, method="REML") 
+summary(OahuFixedMod)
+```
+
+#Compare Mixed Effects Mod to Fixed Effects Mod
+```{r}
+anova(OahuMixedMod, OahuFixedMod)
+```
+###According to the ANOVA test, there is more variability in model structure (error) accounted for by the mixed effects model that includes Location as a random effect. We know this because the AIC score of the OahuMixedMod is 709.86, compared to the OahuFixedMod's AIC score of 824.66. The p-value of <0.0001 indicates that the model fit is significantly different between the two models. Thus, the Mixed Effects model is the best model. 
+
+
+# Add More Parameters, keeping Location as the Random Effect
+```{r}
+library(lme4)
+OahuMixed2<- lme(data =HawaiiWaterCleanOahu2,
+                     DO~ Date*Enterococcus*Temperature*Salinity*Turbidity, ###won't let me use pH or time
+                     random = ~1|Location)       ###R won't let me use week, month, or year as a random effect  
+```
+
+
+##Determine Temporal Autocorrelation in Model
+```{r}
+ACF(OahuMixed2)
+```
+
+##MixedMod-DOESN'T WORK, NONE OF THE PARAMETERS ARE SIGNIFICANT
+```{r}
+OahuMixedMod2<- lme(data = HawaiiWaterCleanOahu2,  DO~ Date*Enterococcus*Temperature*Salinity*Turbidity, 
+                     random = ~1|Location, 
+                     correlation = corAR1(form = ~ Date|Location, value = 0.114),
+                    method = "REML")
+
+summary(OahuMixedMod2)
+```
+
+
+
+
+
+
+#Research question: Is there a trend over time in DO concentrations by region? 
+
+###Split Dataset by Region (Use full dataset)
+```{r}
+HawaiiWaterCleanOahuNorth<- filter(HawaiiWaterCleanOahu, Region== "North")
+HawaiiWaterCleanOahuSouth<- filter(HawaiiWaterCleanOahu, Region== "South")
+HawaiiWaterCleanOahuEast<- filter(HawaiiWaterCleanOahu, Region== "East")
+HawaiiWaterCleanOahuWest<- filter(HawaiiWaterCleanOahu, Region== "West")
+```
+
+
+##Run a Mann Kendall Test for North Oahu
+```{r}
+library(trend)
+mk.test(HawaiiWaterCleanOahuNorth$DO)
+```
+
+##Run a Mann Kendall Test for South Oahu
+```{r}
+library(trend)
+mk.test(HawaiiWaterCleanOahuSouth$DO)
+```
+
+##Run a Mann Kendall Test for East Oahu
+```{r}
+library(trend)
+mk.test(HawaiiWaterCleanOahuEast$DO)
+```
+
+##Run a Mann Kendall Test for West Oahu
+```{r}
+library(trend)
+mk.test(HawaiiWaterCleanOahuWest$DO)
+```
+###For North Oahu, the z-value is 3.808, so we see a positive trend in DO concentrations over time. The p-value is 0.00014,so we reject the null hypothesis that the data come from a population with independent realizations and are identically distributed . For South Oahu, the z-value is 7.14, so we see a positive trend in DO concentrations over time. The p-value for Paul Lake is listed as 9.14e-13, so we reject the null hypothesis that the data come from a population with independent realizations and are identically distributed. For East Oahu, the z-value is 2.4. For West Oahu, the z-value is -4.009. 
+
+##Pettit's Test for North Oahu
+```{r}
+pettitt.test(HawaiiWaterCleanOahuNorth$DO)
+```
+###Because the p-value is <0.05, the change point is significant. Given 1st change point for Peter Lake is 347, we scroll to observation 347 in data set, so first change point occurred in 2004-08-16
+
+
+##Run a separate Mann-Kendall Test for Each Change Point
+```{r}
+mk.test(HawaiiWaterCleanOahuNorth$DO[1:346])
+mk.test(HawaiiWaterCleanOahuNorth$DO[347:1002])
+```
+###p-value for [347:1002] is significant, so run a Pettit's Test
+
+
+##Is there a second change point?
+```{r}
+pettitt.test(HawaiiWaterCleanOahuNorth$DO[347:1002])
+```
+###347 + 360=707, so look at 707th row->Observation occurred on 2005-08-17
+
+# Run another Mann-Kendall for the second change point
+####Now split dataset into three pieces
+```{r}
+mk.test(HawaiiWaterCleanOahuNorth$DO[347:706])   
+mk.test(HawaiiWaterCleanOahuNorth$DO[707:1002])  
+```
+###If z-score is positive, it's a positive trend. If z-score is negative, it is a negative trend
+###There is a significant trend in DO concentrations over time at North Oahu for rows:347:706 because the p-value is 0.00016, which is below 0.05. 
+###There is also not a significant trend in DO concentrations over time at North Oahu for rows 707:1002 because the p-value is 0.59, which is above 0.05. 
+
+#Pettit's Test for South Oahu
+```{r}
+pettitt.test(HawaiiWaterCleanOahuSouth$DO)
+```
+###Change point is significant bc p<0.05. Given 1st change point for South Oahu is 2260, we scroll to observation 2260 in data set, so first change point occurred in 2005-02-28
+. 
+
+#Run separate Mann-Kendall Test for each change point in South Oahu
+```{r}
+mk.test(HawaiiWaterCleanOahuSouth$DO[1:2259])
+mk.test(HawaiiWaterCleanOahuSouth$DO[2260:2634])
+```
+
+
+##Is there a second change point?
+```{r}
+pettitt.test(HawaiiWaterCleanOahuSouth$DO[2260:2634])
+```
+###The p-value is significant, so there is a second change point. 2260+187=2447. Look at 2447'th row for second change point, it occurred in 2006-10-12
+
+
+# Run another Mann-Kendall for the second change point
+####Now split dataset into three pieces
+```{r}
+mk.test(HawaiiWaterCleanOahuSouth$DO[2260:2446])   
+mk.test(HawaiiWaterCleanOahuSouth$DO[2447:2634])  
+```
+###If z-score is positive, it's a positive trend. If z-score is negative, it is a negative trend
+###There is a significant trend in DO concentrations over time at South Oahu for rows:2260:2446 because the p-value is 0.00038, which is below 0.05. 
+###There is also not a significant trend in DO concentrations over time for rows 2447:2634 because the p-value is 0.12, which is above 0.05. 
+
+
+#Petitt Test for East Oahu
+```{r}
+pettitt.test(HawaiiWaterCleanOahuEast$DO)
+```
+###Because the p-value is <0.05, the change point is significant. Given 1st change point for East Oahu is 675, we scroll to observation 675 in data set, so first change point occurred in 2006-09-25
+
+
+#Run separate Mann-Kendall Test for each change point
+```{r}
+mk.test(HawaiiWaterCleanOahuEast$DO[1:674])
+mk.test(HawaiiWaterCleanOahuEast$DO[675:999])
+```
+###There are no more change points because p-value is >0.05 for interval [675:999]
+
+
+#Petitt Test for West Oahu
+```{r}
+pettitt.test(HawaiiWaterCleanOahuWest$DO)
+```
+###Because the p-value is <0.05, the change point is significant. Given 1st change point for West Oahu is 663, we scroll to observation 663 in data set, so first change point occurred in 2003-12-03
+
+
+#Run separate Mann-Kendall Test for each change point
+```{r}
+mk.test(HawaiiWaterCleanOahuWest$DO[1:662])
+mk.test(HawaiiWaterCleanOahuWest$DO[663:969])
+```
+###p-value for [663:969] is significant, so there is a second change point
+
+##What is the second change point?
+```{r}
+pettitt.test(HawaiiWaterCleanOahuWest$DO[663:969])
+```
+663+164=827, second change point occurred on 2004-10-20
+
+
+# Run another Mann-Kendall for the third change point (if it exists)
+####Now split dataset into three pieces
+```{r}
+mk.test(HawaiiWaterCleanOahuWest$DO[663:826])   
+mk.test(HawaiiWaterCleanOahuWest$DO[827:969])  
+```
+###There is not a third changepoint
+
+
+#Generate a graph that illustrates the Dissolved Oxygen concentrations over time, coloring by Region
+
+```{r, warning=FALSE, message=FALSE, fig.height =7, fig.width = 15}
+library(wesanderson)
+OahuDOPlot<-ggplot(HawaiiWaterCleanOahu, aes(x = Date, y = DO, color = Region)) + 
+  geom_point(alpha=1) +
+scale_color_manual(values=wes_palette(name="GrandBudapest2")) +
+  ##geom_vline(xintercept=as.Date("2004-08-16"),color="253494", origin= "1970-01-01", lty=2) + ###First Change Point for North Oahu 
+ ## geom_vline(xintercept=as.Date("2005-08-17"), color="253494", origin= "1970-01-01", lty=2)  ###Second Change Point for North Oahu 
+
+  geom_smooth(aes(x = Date, y = DO, span=0.1), color="black", linetype=1, size=0.5) +
+  labs(title="The Effect of Sample Date on Dissolved Oxygen Concentrations in Oahu", 
+       x="Sample Date",
+       y="Dissolved Oxygen (mg/L)")+
+  scale_x_date(labels = date_format("%m/%Y"), breaks = date_breaks("1 month"))+
+  scale_y_continuous(limits=c())
+
+```
+
+
+```{r, warning=FALSE, message=FALSE, fig.height =7, fig.width = 15}
+library(wesanderson)
+OahuTemperaturePlot<-ggplot(HawaiiWaterCleanOahu, aes(x = Date, y = Temperature, color = Region)) + 
+  geom_point(alpha=1) +
+scale_color_manual(values=wes_palette(name="GrandBudapest2")) +
+  ##geom_vline(xintercept=as.Date("2004-08-16"),color="253494", origin= "1970-01-01", lty=2) + ###First Change Point for North Oahu 
+ ## geom_vline(xintercept=as.Date("2005-08-17"), color="253494", origin= "1970-01-01", lty=2)  ###Second Change Point for North Oahu 
+
+  geom_smooth(aes(x = Date, y = Temperature, span=0.1), color="black", linetype=1, size=0.5) +
+  labs(title="The Effect of Sample Date on Temperature in Oahu", 
+       x="Sample Date",
+       y="Temperature(degrees C") +
+  scale_x_date(labels = date_format("%m/%Y"), breaks = date_breaks("1 month"))
+
+
+```
+
+```{r, fig.height=7, fig.width=15, message=FALSE}
+grid.arrange(OahuDOPlot, OahuTemperaturePlot, nrow=2)
+```
+
+
+### Cold water can hold more dissolved oxygen than warm water. In winter and early spring, when the water temperature is low, the dissolved oxygen concentration is high. In summer and fall, when the water temperature is high, the dissolved-oxygen concentration is low.
+
+
+5. Is there equal variance among the publication years for each chemical? Hint: var.test is not the correct function.
+
+###Use bartlett.test for non-normal distributions(var.test is for normallly distributed populations)
+```{r}
+bartlett.test(Neonicotinoids$Pub..Year~Neonicotinoids$Chemical.Name)
+
+```
+
+#Summary and Conclusions
+

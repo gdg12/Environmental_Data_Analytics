@@ -1,0 +1,18 @@
+---
+title: "Hawaii Data Exploration"
+author: "Gaby Garcia"
+date: "4/3/2019"
+output: pdf_document
+---
+
+#Set Working Directory and Import Water Data
+```{r}
+setwd("~/Desktop/Environmental Data Analytics/Environmental_Data_Analytics/Final Project")
+HawaiiWater<-read.csv('HawaiiWaterDataProcessed.csv')
+```
+
+
+```{r}
+
+```
+
